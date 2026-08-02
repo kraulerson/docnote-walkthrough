@@ -174,3 +174,127 @@ in the 7-step template, so the numerator exceeds the denominator.
 Severity: Minor (cosmetic; verification itself worked)
 Resolution: documented-path
 Time lost: 1
+
+---
+
+### SMOOTH — Build Loop, twice
+When: 2026-08-02 ~10:00-10:20 | Where: Phase 2 Features 1 & 2
+- The Build Loop gates are excellent discipline: the "verify tests fail"
+  step is mechanically encouraged, and I genuinely caught a real bug in
+  Feature 2 (selection collapsing on toolbar mousedown) BECAUSE the flow
+  tests were written first and failed for the right reason.
+- The security_audit step machine-reads the audit file's verdict — I had to
+  produce a real audit with an unqualified "All findings resolved: Yes" and
+  a "| Open | 0 |" row before it would let me continue. This is the kind of
+  gate that prevents rubber-stamping.
+- feat: commits are blocked without a complete Build Loop; chore/docs commits
+  are not. Matched the docs exactly.
+- Context7 gave me correct current mammoth.js browser-API guidance for the
+  architecture doc.
+
+### ISSUE-008 — UAT HTML template has a 5th placeholder (__FEATURE_OPTIONS__) not listed with the others
+When: 2026-08-02 ~10:22 | Where: tests/uat/templates/test-session-template.html
+Expected: The template's top-of-file AGENT comments enumerate the placeholders
+to replace (__SESSION_TITLE__, __SESSION_DATE__, __SESSION_FEATURES__,
+__TESTER_PRE_FLIGHT__, __FEATURE_SECTIONS__, __SCENARIOS_JSON__). I replaced
+all of those.
+Actual: A 6th placeholder, __FEATURE_OPTIONS__, lives only in a comment at
+line 265 buried mid-file inside the addBug() JS function. I missed it (a
+junior certainly would). The scenario linter caught it as "file-level:
+unreplaced placeholder — line 536" — good backstop — but the error names a
+line in the OUTPUT file, and the fix location is a different, mid-file spot
+in the template. A junior would need a moment to connect the two.
+Severity: Minor (linter caught it; cost a few minutes)
+Resolution: documented-path (replaced with the two feature options; re-lint exit 0)
+Time lost: 4
+
+### SMOOTH — UAT scenario linter
+When: 2026-08-02 ~10:22 | Where: scripts/lint-uat-scenarios.sh
+It enforces real quality: state-restatement opener, concrete pass/fail
+anchors, ≥60-char expected, cleanup for mutating scenarios. Caught my missed
+placeholder. Exit codes match the docs (2=structural, 1=quality, 0=clean).
+Note: piping its output to `tail` masked the exit code (got 0 when the real
+exit was 1) — my mistake, but a junior would be fooled; the doc examples
+show bare invocation, which is correct.
+
+### ISSUE-009 — Step 2.4 audit semgrep command misses what the commit gate enforces
+When: 2026-08-02 ~10:24 | Where: Builder's Guide Step 2.4 vs pre-commit hook
+Expected: Builder's Guide Step 2.4 gives the audit command as
+`semgrep scan --config=p/owasp-top-ten --config=p/security-audit src/`.
+I ran exactly that for both features' audits — 0 findings each — and marked
+the security_audit step complete with a clean audit.
+Actual: The pre-commit hook runs a DIFFERENT, larger rule set (adds the
+browser-sink pack r/javascript.browser.security.insecure-document-method +
+the project .semgrep/soif-dom-sinks.yml, per platform module §4.6/BL-118).
+On commit it BLOCKED me on `el.innerHTML = SAMPLE_HTML` in a test helper —
+a finding the documented Step-2.4 command never surfaces. So a diligent
+junior who runs exactly the Builder's Guide command gets a green audit and
+is then blocked at commit by rules the guide's audit step never mentioned.
+The two should agree, or Step 2.4 should tell you to also run the browser
+pack.
+Severity: Minor (documented remediation exists and worked)
+Resolution: documented-path (confirmed false positive — hardcoded literal
+test fixture, not user input; suppressed with an inline `// nosemgrep:`
+comment + justification per platform module §4.6 / Security Scan Guide.
+Did NOT use --no-verify.)
+Time lost: 6
+
+---
+
+### ISSUE-010 — feat: commit permanently blocked after completing the Build Loop; multiple commits silently lost to a tail pipe
+When: 2026-08-02 ~10:15-12:43 | Where: pre-commit gate / process-checklist ordering
+Expected: CLAUDE.md's Build Loop section lists the steps (tests → implement →
+audit → docs → feature_recorded) and I marked them in order, then ran the UAT
+session (also to completion), then committed the feature code with a `feat:`
+message.
+Actual: The pre-commit gate blocks a `feat:` commit unless a Build Loop is
+ACTIVE:
+  "[FAIL] pre-commit gate: 'feat(...)' commit blocked — no Build Loop active."
+By completing feature_recorded (which CLOSES the loop) and then running the
+whole UAT session BEFORE committing the feature code, I left myself unable to
+commit the feature at all. The framework's implicit assumption is that you
+commit the feature WHILE the loop is active (steps 1-5 done, loop not yet
+closed) — but nothing enforces that ordering earlier, and CLAUDE.md doesn't
+say "commit before record-feature." Feature 1 only worked because I happened
+to commit before marking step 6; Feature 2 I marked step 6 first.
+Compounding: I piped every `git commit` through `| tail -N`, which hid the
+absence of a `[main <sha>]` success line, so I believed Feature 2, the UAT
+template commit, and the nosemgrep-fix commit had all landed (I even saw
+"PUSHED" from a chained echo). git reflog proved only Feature 1 (d3d2e15)
+ever committed — four "successful"-looking commits never happened.
+Severity: Major (a real junior would be badly stuck: legitimate, fully-tested
+feature work that cannot be committed, with a confusingly-worded gate; and the
+silent-tail trap would make them think everything was saved when nothing was).
+Resolution: documented-path — followed the gate's own remediation
+("scripts/process-checklist.sh --start-feature NAME ... Re-run your commit").
+Re-registered the build loop for the (genuinely test-first, audited,
+documented) Feature-2-plus-remediation work and committed while active.
+Also: persona-break honesty note — I should have verified each commit landed
+(git log) instead of trusting piped output; that's on me, but the framework's
+gate output makes the failure easy to miss.
+Time lost: ~25 (spread across the session as re-work)
+
+### ISSUE-011 — nosemgrep directive silently ineffective when an explanatory comment sits between it and the flagged line
+When: 2026-08-02 ~12:41 | Where: platform module §4.6 nosemgrep guidance
+Expected: Platform module §4.6: "Suppress a confirmed-safe line with a semgrep
+inline comment (`// nosemgrep` ... adjacent to the line)." I put the directive
+first, then three lines explaining WHY, then the flagged `el.innerHTML` line.
+Actual: Semgrep only honors `nosemgrep` on the SAME line as the finding or the
+line IMMEDIATELY above it. My explanation lines pushed the directive 4 lines
+away, so it was ignored and the commit stayed blocked — with no hint that the
+suppression wasn't taking effect. "Adjacent" in the docs is ambiguous; a
+junior naturally writes the directive-then-explanation order that breaks it.
+Reordering (explanation first, `// nosemgrep` on the line immediately above
+the finding) fixed it.
+Severity: Minor (self-inflicted but doc wording invites it)
+Resolution: documented-path (moved the directive to the immediately-preceding line)
+Time lost: 5
+
+### SMOOTH — BL-185 records every nosemgrep as an audited observation
+When: 2026-08-02 ~12:43 | Where: pre-commit gate
+Even when a nosemgrep is legitimate, the gate prints "BL-185: N staged line(s)
+carrying a semgrep suppression directive ... this commit's SAST verdict does
+not vouch for them (observation recorded to .claude/bypass-audit.json)." You
+cannot suppress silently — good governance. (Minor: it also matches the literal
+token "nosemgrep" in prose, e.g. this very log and the agent report, so the
+count includes non-code mentions.)

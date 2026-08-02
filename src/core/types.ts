@@ -47,6 +47,8 @@ export interface AnnotationStore {
 }
 
 export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+/** BUG-1: cap on total advertised uncompressed ZIP size (decompression-bomb guard). */
+export const MAX_UNCOMPRESSED_BYTES = 50 * 1024 * 1024;
 export const MAX_EXTRACTED_CHARS = 5_000_000;
 export const MAX_NOTE_CHARS = 1000;
 export const MAX_SELECTION_CHARS = 5000;

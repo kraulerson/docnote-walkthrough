@@ -7,7 +7,8 @@ import mammoth from 'mammoth';
 import { DocNoteError } from './errors';
 import { log } from './log';
 import { sanitizeToFragment } from './sanitize';
-import { MAX_DOCUMENT_BYTES, MAX_EXTRACTED_CHARS } from './types';
+import { MAX_DOCUMENT_BYTES, MAX_EXTRACTED_CHARS, MAX_UNCOMPRESSED_BYTES } from './types';
+import { uncompressedSizeExceeds } from './zipGuard';
 
 export interface ParsedDocument {
   /** Sanitized, inert DOM of the document body. Insert-ready. */
@@ -23,6 +24,7 @@ export interface ParsedDocument {
 export interface ParseOptions {
   maxBytes?: number;
   maxChars?: number;
+  maxUncompressedBytes?: number;
 }
 
 const BLOCK_SELECTOR = 'p, h1, h2, h3, h4, h5, h6, li, td, th, pre, blockquote';
@@ -36,6 +38,14 @@ export async function parseDocx(
 
   if (buffer.byteLength > maxBytes) {
     log('warn', 'parse.rejected', { reason: 'file-too-large', bytes: buffer.byteLength });
+    throw new DocNoteError('file-too-large');
+  }
+
+  // BUG-1: reject decompression bombs on the advertised uncompressed size,
+  // BEFORE mammoth inflates anything.
+  const maxUncompressed = options.maxUncompressedBytes ?? MAX_UNCOMPRESSED_BYTES;
+  if (uncompressedSizeExceeds(buffer, maxUncompressed)) {
+    log('warn', 'parse.rejected', { reason: 'uncompressed-too-large', limit: maxUncompressed });
     throw new DocNoteError('file-too-large');
   }
 

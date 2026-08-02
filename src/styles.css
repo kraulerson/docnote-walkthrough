@@ -123,3 +123,70 @@ body {
   max-width: 46rem;
   line-height: 1.6;
 }
+
+.selection-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: #fafafa;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  width: fit-content;
+}
+
+.toolbar-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #5f0012;
+}
+
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: #ffffff;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.swatch:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.swatch-dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+mark.hl {
+  padding: 0 0.05em;
+  border-radius: 2px;
+  color: inherit;
+}
+
+mark.hl-yellow,
+.swatch-dot.hl-yellow {
+  background: #ffe08a;
+}
+
+mark.hl-green,
+.swatch-dot.hl-green {
+  background: #b5e6b5;
+}
+
+mark.hl-blue,
+.swatch-dot.hl-blue {
+  background: #b3d4f5;
+}

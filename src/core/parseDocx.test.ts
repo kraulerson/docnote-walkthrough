@@ -89,4 +89,16 @@ describe('parseDocx (Feature 1: open & render .docx read-only)', () => {
   it('should enforce the extracted-character cap (document-too-long)', async () => {
     await expectCode(parseDocx(await fixture('valid.docx'), { maxChars: 10 }), 'document-too-long');
   });
+
+  it('should reject a decompression bomb BEFORE inflating it (BUG-1, SEV-1)', async () => {
+    // bomb.docx is ~115 KB compressed but its document.xml is ~33.6 MB. With a
+    // low uncompressed cap the guard must reject on the advertised size, fast,
+    // WITHOUT materializing the 33.6 MB (which takes many seconds).
+    const started = performance.now();
+    await expectCode(
+      parseDocx(await fixture('bomb.docx'), { maxUncompressedBytes: 5_000_000 }),
+      'file-too-large',
+    );
+    expect(performance.now() - started).toBeLessThan(1000);
+  });
 });

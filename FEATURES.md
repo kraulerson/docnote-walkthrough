@@ -19,4 +19,16 @@
 
 ---
 
+## Feature 2: highlight-apply
+
+**Phase Built:** 2
+**Status:** Complete
+**Summary:** Select text in the rendered document and apply one of three labeled highlight colors. Anchors are (paragraphIndex, startOffset, endOffset, exactText) with UTF-16 code-unit offsets; highlights repaint deterministically from state on every change. Overlaps and cross-paragraph selections are refused with specific hints.
+**Key Interfaces:** docs/api and interfaces/core-anchors.md (`anchorFromRange`, `rangeFromAnchor`, `applyHighlightMarks`, `anchorsIntersect`)
+**Related ADRs:** docs/ADR documentation/ADR-0001-architecture-selection.md (anchor model consequence)
+**Test Coverage:** Unit (anchor math: styled runs, unicode surrogate pairs, stale/out-of-range anchors, overlap rule) + Component (toolbar states) + App flow (select→pick→mark, overlap refusal, text-integrity invariant).
+**Known Limitations:** Highlights cannot span multiple paragraphs (anchor model, documented); toolbar position is static above the document rather than floating at the selection.
+
+---
+
 <!-- Copy the section above for each new feature. Number sequentially. -->

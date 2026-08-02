@@ -71,4 +71,38 @@ describe('sanitizeToFragment (the ONLY sanctioned HTML sink — Bible §10 rule 
     const out = sanitizeToFragment('<p><a href="javascript:x">Budget figures</a></p>');
     expect(out.textContent).toContain('Budget figures');
   });
+
+  it('should strip external images, video, and audio (BUG-6: no beacons/subresources)', () => {
+    const out = html(
+      sanitizeToFragment(
+        '<p>x</p><img src="https://evil.example/track.gif?leak=1">' +
+          '<video src="https://evil.example/v.mp4"></video>' +
+          '<audio src="https://evil.example/a.mp3"></audio>',
+      ),
+    );
+    expect(out).not.toContain('evil.example');
+    expect(out).not.toContain('<img');
+    expect(out).not.toContain('<video');
+    expect(out).not.toContain('<audio');
+    expect(out).toContain('<p>x</p>');
+  });
+
+  it('should render external links inert — text kept, href/target removed (BUG-6/7)', () => {
+    const out = html(
+      sanitizeToFragment('<p><a href="https://evil.example/phish" target="_blank">Click to continue</a></p>'),
+    );
+    expect(out).not.toContain('href');
+    expect(out).not.toContain('target');
+    expect(out).not.toContain('evil.example');
+    expect(out).toContain('Click to continue');
+  });
+
+  it('should strip style and class attributes (BUG-16)', () => {
+    const out = html(
+      sanitizeToFragment('<p style="position:fixed" class="x">t</p>'),
+    );
+    expect(out).not.toContain('style=');
+    expect(out).not.toContain('class=');
+    expect(out).toContain('t');
+  });
 });

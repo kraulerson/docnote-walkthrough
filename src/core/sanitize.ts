@@ -8,9 +8,32 @@ import DOMPurify from 'dompurify';
 
 const SANITIZE_CONFIG = {
   RETURN_DOM_FRAGMENT: true as const,
-  // Document rendering needs structure, not interactivity: forbid anything
-  // that can execute, navigate, or load external content beyond images.
-  FORBID_TAGS: ['style', 'form', 'input', 'button', 'iframe', 'object', 'embed', 'svg', 'math'],
+  // Document rendering needs structure, not interactivity or external content.
+  // BUG-6/7: forbid subresource-loading tags (img/video/audio/source/picture)
+  // so a crafted .docx cannot beacon out, and strip href/target so external
+  // links are inert text (no phishing navigation) — defense that does not rely
+  // on the meta CSP alone. Text-focused rendering is the documented scope.
+  FORBID_TAGS: [
+    'style',
+    'form',
+    'input',
+    'button',
+    'iframe',
+    'object',
+    'embed',
+    'svg',
+    'math',
+    'img',
+    'video',
+    'audio',
+    'source',
+    'picture',
+    'track',
+    'link',
+    'base',
+  ],
+  // BUG-6/7/16: strip navigation, inline style, and class from every element.
+  FORBID_ATTR: ['href', 'target', 'style', 'class', 'srcset', 'src'],
   ALLOW_DATA_ATTR: false,
 };
 
