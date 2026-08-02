@@ -60,15 +60,6 @@ _When this gate is crossed, **append** a completed approval table directly below
 <!-- BL-170-APPEND-DESIGN -->
 _When this gate is crossed, **append** a completed approval table directly below (above this section's closing `---`) — use the shape at the top of this file (artifacts to review: PROJECT_BIBLE.md, Threat Model). Append-only: never edit a line once pushed._
 
-| Field | Value |
-|---|---|
-| **Gate** | Phase 1 → Phase 2 |
-| **Reviewer** | Karl (Orchestrator, self-review — personal project) |
-| **Date** | 2026-08-02 |
-| **Artifacts reviewed** | PROJECT_BIBLE.md (16 sections incl. Threat Model TM-001..TM-009 and stress test); docs/ADR documentation/ADR-0001-architecture-selection.md |
-| **Decision** | Approved |
-| **Notes** | Stack: React 18 + Vite + TS strict; mammoth + DOMPurify; localStorage repository. Threat model covers all STRIDE categories with concrete paths and two multi-step chains. data_classification=internal recorded with documented ZDR exception (tier-crosscheck-6). Known risk acknowledged: self-review of own architecture (Light track personal). |
-
 ---
 
 ## Phase Gate: Phase 2 → Phase 3
@@ -161,5 +152,3 @@ _Append a completed copy of the shape below when a penetration test is performed
     | **Tester** | person / firm |
     | **Date** | YYYY-MM-DD |
     | **Report** | docs/test-results/YYYY-MM-DD_pen-test.md |
-| 2026-08-02 | data_classification set | reconfigure-project.sh | Orchestrator | Applied | new value: internal (tier-crosscheck-6) |
-| 2026-08-02 | zdr_attested set | reconfigure-project.sh | Orchestrator | Applied | new value: false (reason: Personal project on a consumer AI subscription (no ZDR available). End-user documents are processed entirely client-side in the user's browser and are never transmitted to any server or the AI provider. Development and testing use synthetic fixture documents only, so no Internal-classified data is sent to the LLM. Risk accepted by the Orchestrator (self).) (tier-crosscheck-6) |
