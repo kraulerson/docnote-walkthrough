@@ -5,8 +5,7 @@ name: Release — docnote-walkthrough
 # No secrets are required (Pages uses the workflow's OIDC token).
 # Optional: set repo variable PREVIEW_URL to the live Pages URL to enable
 # the post-deploy OWASP ZAP DAST scan below.
-# NOTE: the actions/*-pages actions below use version tags; pin them to
-# commit SHAs to match the other SHA-pinned actions when convenient.
+# All actions are pinned to commit SHAs (immutable) with a version comment.
 # ─────────────────────────────────────────────────────────────────
 
 on:
@@ -48,16 +47,16 @@ jobs:
         #   .NET:     dotnet tool install --global CycloneDX && dotnet CycloneDX [project].csproj -o sbom.json
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
       - name: Upload built site as a Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: dist
 
       - name: Deploy to GitHub Pages
         id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
 
       - name: DAST scan (OWASP ZAP baseline)
         # Set PREVIEW_URL in repository variables (Settings -> Variables). It must
