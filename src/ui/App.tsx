@@ -9,6 +9,8 @@ import { MAX_DOCUMENT_BYTES } from '../core/types';
 import { Banner } from './Banner';
 import { DocumentView } from './DocumentView';
 import { HighlightMenu } from './HighlightMenu';
+import { NoteEditor } from './NoteEditor';
+import { NotesPanel } from './NotesPanel';
 import { SelectionToolbar } from './SelectionToolbar';
 
 type ViewState =
@@ -29,6 +31,7 @@ export function App() {
   const [highlights, setHighlights] = useState<readonly Highlight[]>([]);
   const [toolbar, setToolbar] = useState<ToolbarState>({ visible: false });
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
+  const [noteEditorFor, setNoteEditorFor] = useState<string | null>(null);
   const documentContainer = useRef<HTMLDivElement | null>(null);
   // BUG-4: monotonic token so a slow parse of an earlier file cannot overwrite
   // the result of a later-picked file (concurrent-open race).
@@ -52,6 +55,7 @@ export function App() {
       }
       setHighlights([]);
       setActiveHighlightId(null);
+      setNoteEditorFor(null);
       setView({ kind: 'ready', fileName: file.name, document: parsed });
     } catch (caught) {
       if (token !== openToken.current) {
@@ -150,7 +154,50 @@ export function App() {
     // Idempotent: filtering a missing id is a no-op. Also drops the note (F4).
     setHighlights((previous) => previous.filter((h) => h.id !== id));
     setActiveHighlightId(null);
+    setNoteEditorFor((current) => (current === id ? null : current));
     log('info', 'highlight.removed', {});
+  }, []);
+
+  const openNoteEditor = useCallback((id: string) => {
+    setNoteEditorFor(id);
+    setActiveHighlightId(null); // close the menu; the editor takes over
+  }, []);
+
+  const saveNote = useCallback((id: string, text: string) => {
+    const now = new Date().toISOString();
+    setHighlights((previous) => {
+      if (!previous.some((h) => h.id === id)) {
+        // Highlight was removed while the editor was open — discard gracefully.
+        setError('The highlight for this note no longer exists.');
+        return previous;
+      }
+      return previous.map((h) =>
+        h.id === id
+          ? {
+              ...h,
+              note: { text, createdAt: h.note?.createdAt ?? now, updatedAt: now },
+              updatedAt: now,
+            }
+          : h,
+      );
+    });
+    setNoteEditorFor(null);
+    log('info', 'note.saved', { chars: text.length });
+  }, []);
+
+  const deleteNote = useCallback((id: string) => {
+    setHighlights((previous) =>
+      previous.map((h) => {
+        if (h.id !== id) {
+          return h;
+        }
+        const { note: _removed, ...rest } = h;
+        void _removed;
+        return rest;
+      }),
+    );
+    setActiveHighlightId(null);
+    log('info', 'note.deleted', {});
   }, []);
 
   const setDocumentContainer = useCallback((element: HTMLDivElement | null) => {
@@ -192,7 +239,18 @@ export function App() {
                 highlight={highlights.find((h) => h.id === activeHighlightId) ?? null}
                 onRemove={removeHighlight}
                 onClose={() => setActiveHighlightId(null)}
+                onAddOrEditNote={openNoteEditor}
+                onDeleteNote={deleteNote}
               />
+              {noteEditorFor !== null && (
+                <NoteEditor
+                  initialText={
+                    highlights.find((h) => h.id === noteEditorFor)?.note?.text ?? ''
+                  }
+                  onSave={(text) => saveNote(noteEditorFor, text)}
+                  onCancel={() => setNoteEditorFor(null)}
+                />
+              )}
               <DocumentView
                 document={view.document}
                 highlights={highlights}
@@ -201,10 +259,14 @@ export function App() {
             </>
           )}
         </section>
-        <aside className="notes-panel" aria-label="Notes">
-          <h2>Notes</h2>
-          <p>No notes yet.</p>
-        </aside>
+        {view.kind === 'ready' ? (
+          <NotesPanel highlights={highlights} />
+        ) : (
+          <aside className="notes-panel" aria-label="Notes">
+            <h2>Notes</h2>
+            <p>No notes yet.</p>
+          </aside>
+        )}
       </main>
     </div>
   );

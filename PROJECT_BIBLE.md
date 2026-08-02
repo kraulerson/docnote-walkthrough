@@ -1,6 +1,6 @@
 # Project Bible — DocNote (docnote-walkthrough)
 
-<!-- Last Updated: 2026-08-02 (Phase 2 — Feature 3 remove-highlight complete) -->
+<!-- Last Updated: 2026-08-02 (Phase 2 — Feature 4 notes-crud complete) -->
 
 **Status:** Approved (Phase 1 → 2 gate)
 **Approved By:** Karl (Orchestrator, self-review — personal project)

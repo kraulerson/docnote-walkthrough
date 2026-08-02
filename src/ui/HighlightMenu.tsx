@@ -6,6 +6,7 @@ interface HighlightMenuProps {
   onClose: () => void;
   /** Feature 4 wires note actions here; absent in Feature 3. */
   onAddOrEditNote?: (id: string) => void;
+  onDeleteNote?: (id: string) => void;
 }
 
 /**
@@ -13,10 +14,17 @@ interface HighlightMenuProps {
  * actions only — never color-only. Feature 3 ships Remove; Feature 4 adds the
  * note actions through onAddOrEditNote.
  */
-export function HighlightMenu({ highlight, onRemove, onClose, onAddOrEditNote }: HighlightMenuProps) {
+export function HighlightMenu({
+  highlight,
+  onRemove,
+  onClose,
+  onAddOrEditNote,
+  onDeleteNote,
+}: HighlightMenuProps) {
   if (highlight === null) {
     return null;
   }
+  const hasNote = highlight.note !== undefined;
   return (
     <div
       className="highlight-menu"
@@ -29,7 +37,12 @@ export function HighlightMenu({ highlight, onRemove, onClose, onAddOrEditNote }:
     >
       {onAddOrEditNote && (
         <button type="button" role="menuitem" onClick={() => onAddOrEditNote(highlight.id)}>
-          {highlight.note ? 'Edit note' : 'Add note'}
+          {hasNote ? 'Edit note' : 'Add note'}
+        </button>
+      )}
+      {hasNote && onDeleteNote && (
+        <button type="button" role="menuitem" onClick={() => onDeleteNote(highlight.id)}>
+          Delete note
         </button>
       )}
       <button type="button" role="menuitem" onClick={() => onRemove(highlight.id)}>

@@ -43,4 +43,16 @@
 
 ---
 
+## Feature 4: notes-crud
+
+**Phase Built:** 2
+**Status:** Complete
+**Summary:** Attach/edit/delete a short plain-text note (1-1000 chars) on a highlight through the HighlightMenu + NoteEditor. Notes list in the NotesPanel (side panel). Text is rendered exclusively as text (React-escaped / textarea value) — never HTML — which is the invariant Feature 6 persistence relies on.
+**Key Interfaces:** src/ui/NoteEditor.tsx, src/ui/NotesPanel.tsx, src/ui/App.tsx (`saveNote`, `deleteNote`, `openNoteEditor`)
+**Related ADRs:** docs/ADR documentation/ADR-0001-architecture-selection.md
+**Test Coverage:** Component (editor validation: empty/whitespace/over-limit/pre-fill/cancel) + App flow (attach → panel shows it, edit replaces, delete keeps highlight).
+**Known Limitations:** Side panel lists notes but click-to-jump, document ordering, and the "unlocated" state arrive in Feature 5. Any annotation change repaints the whole document (marks are unaffected by note text — a minor inefficiency, acceptable at MVP scale).
+
+---
+
 <!-- Copy the section above for each new feature. Number sequentially. -->

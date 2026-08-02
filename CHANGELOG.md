@@ -43,6 +43,12 @@ for handoff clarity. Categories are ordered by impact severity.
   schemaVersion 1) defined in src/core/types.ts. No storage behavior yet.
 
 ### Added
+- Feature 4 — notes-crud: attach a plain-text note (1-1000 chars) to a
+  highlight via the action menu; edit replaces the text, delete removes the
+  note but keeps the highlight. Notes appear in the side panel. Empty/over-
+  limit saves are blocked with specific messages; a note whose highlight was
+  removed mid-edit is discarded with a message. Note text is always rendered
+  as text, never HTML.
 - Feature 3 — remove-highlight: click a highlight to open a text-labeled
   action menu and remove it; the paragraph returns to normal (text unchanged),
   removal is idempotent, and the menu is keyboard/pointer operable.
