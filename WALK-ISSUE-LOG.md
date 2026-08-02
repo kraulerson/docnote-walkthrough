@@ -422,3 +422,31 @@ is installed. The transient phase3/ summaries are gitignored, so regenerating
 them doesn't itself dirty the tree. This tree-binding is good rigor: you can't
 pass the gate with a summary from an older tree. Just re-run the driver after
 your last commit.
+
+---
+
+### ISSUE-015 — Deadlock: setting current_phase=4 at the gate before running --start-phase4
+When: 2026-08-02 ~15:00 | Where: CLAUDE.md governance vs process-checklist --start-phase4
+Expected: CLAUDE.md's Governance Tracking says at each phase gate: update
+APPROVAL_LOG.md, then "update .claude/phase-state.json: set current_phase to
+the new phase number", commit. I followed that for Phase 3→4 (set
+current_phase=4).
+Actual: With current_phase=4, `check-phase-gate.sh` FAILs with BL-105
+"current_phase is 4 but the Phase-4 release checklist was NEVER STARTED — run
+--start-phase4". But `--start-phase4` runs check-phase-gate first and REFUSES
+because the gate isn't clear (that very BL-105 failure). Deadlock: the only
+command that clears BL-105 won't run while BL-105 is failing.
+The resolution is an ordering the governance text does NOT state: run
+`--start-phase4` while STILL at current_phase=3 — it initializes the Phase-4
+checklist AND auto-advances current_phase 3→4 itself ("[INFO] Advanced
+.current_phase: 3 → 4"). So `--start-phase4` owns the phase bump; the manual
+"set current_phase to the new phase number" step from CLAUDE.md must NOT be
+done for Phase 3→4 (it causes the deadlock). Same likely applies to earlier
+phases where a --start-phaseN exists (Phase 1: --start-phase1; Phase 3:
+--start-phase3 — I ran those at the right phase by luck).
+Severity: Major (a real junior follows CLAUDE.md literally, bumps the phase,
+and hard-deadlocks with two commands each pointing at the other; the escape —
+revert current_phase to N-1 and run --start-phaseN — is not documented)
+Resolution: documented-path-ish — reverted current_phase to 3, ran
+--start-phase4 which advanced it to 4. No --no-verify, no force.
+Time lost: 15
