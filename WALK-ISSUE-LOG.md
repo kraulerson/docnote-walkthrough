@@ -63,3 +63,25 @@ Severity: Confusion (not yet blocking — snyk is first needed in Phase 3; will
 escalate to Blocker if still unauthenticated when Phase 3 requires it)
 Resolution: unresolved (deferred; operator may run `! snyk auth`)
 Time lost: 2
+
+---
+
+### SMOOTH — Intake, resume.sh state machine, Phase 0
+When: 2026-08-02 ~09:00-09:15 | Where: Intake + Phase 0
+- resume.sh correctly moved through its states: intake prompt → (intake done)
+  → printed Section 13 initialization prompt verbatim. Genuinely nice UX.
+- Builder's Guide Phase 0 is prescriptive and easy to follow: each step has a
+  prompt, a review checklist, a template path, and a save-as path. Templates
+  (frd/user-journey/data-contract/manifesto) match what the gate later checks.
+- APPROVAL_LOG.md's append-only design is explained in the file itself with
+  the exact table shape to copy. The 15-line date-proximity rule is documented
+  both in the Builder's Guide and the log.
+- check-phase-gate.sh passed first try and auto-created a snapshot.
+
+### ISSUE-003 — check-versions.sh prints a raw JSON array as an update command
+When: 2026-08-02 ~08:58 | Where: scripts/check-versions.sh output
+Expected: "Update commands (run manually):" lists copy-pasteable commands.
+Actual: Colima's entry printed as a JSON array: `Colima: [ "brew install colima", "brew services start colima" ]` — a junior would not know if this is one command, two, or an error.
+Severity: Minor
+Resolution: documented-path (no update needed; all tools above minimums)
+Time lost: 1
