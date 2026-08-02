@@ -39,18 +39,24 @@ Fixed: GitHub, public repo, personal, web, TypeScript, repo `docnote-walkthrough
 - [x] Feature 6 (localStorage persistence, content-hash) — 6bba7d8;
       restore-across-reload LIVE-verified in Chrome. ALL 6 MVP features built.
       108 tests green, semgrep 0 findings.
-- [ ] UAT Session 3 (F5+F6) — IN PROGRESS (required now)
-- [ ] Phase 2 completion checkpoint + Phase 2→3 gate (no open SEV-1/2; bug gate)
-- [ ] Phase 3: 5 validation scanners + 6 reviewer evals + a11y/robustness
-      (address deferred SEV-3 BUG-9..14, 24 in hardening/accessibility) + archive
-- [ ] Phase 4: release v1.0.0 (tag), handoff, monitoring
-- [ ] WALK-REPORT.md + final push
+- [x] UAT Session 3 (F5+F6) — complete; findings triaged into BUGS.md
+- [x] Phase 2 completion checkpoint + Phase 2→3 gate (no open SEV-1/2)
+- [x] Phase 3: 5 validation scanners (semgrep-full-tree PASS, license PASS,
+      snyk + zap-dast attested-skip, threat-model PASS) + 6 reviewer evals
+      (Red Team RT-01 caught a SEV-1 the self-review missed → fixed, BUG-32) +
+      deferred a11y/robustness addressed; results archived
+- [x] Phase 4: v1.0.0 released to GitHub Pages (tag-driven); handoff, rollback,
+      monitoring, go-live all verified and recorded in APPROVAL_LOG
+- [x] WALK-REPORT.md written + everything pushed
 
 ## Next step
-Run UAT Session 3 for Features 5 & 6 (exploratory agent on persistence/restore
-+ tampered-storage; automated suite; triage). Then Phase 2 completion checklist
-and Phase 2→3 gate. Remaining OPEN bugs are all deferred SEV-3 (BUG-9,10,11,12,
-13,14,24) for Phase 3 hardening/accessibility — no open SEV-1/2.
+**NONE — the walk is COMPLETE.** Final `check-phase-gate.sh` → GATE_EXIT=0,
+"Phase gates consistent"; Phase-4 checklist 6/6. v1.0.0 live at
+https://kraulerson.github.io/docnote-walkthrough/ with a GitHub Release + SBOM.
+All 18 findings are in WALK-ISSUE-LOG.md; the synthesis is in WALK-REPORT.md;
+all 33 DocNote bugs resolved. Local `main` == `origin/main` (c8a9eca).
+If resumed, there is nothing left to build — only optional follow-ups noted in
+the report (e.g. authenticate snyk, stand up UptimeRobot).
 
 ## HARD-WON LESSONS (do not repeat)
 - **Commit the feature WHILE the Build Loop is active** (after steps 1-5,
