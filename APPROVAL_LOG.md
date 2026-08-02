@@ -150,11 +150,12 @@ _Append a completed copy of the shape below at final acceptance. Append-only: ne
 <!-- BL-170-APPEND-DESIGN -->
 _Append a completed copy of the shape below when legal review occurs. Append-only: never edit a line once pushed._
 
-    | Field | Value |
-    |---|---|
-    | **Reviewer** | Attorney / firm name |
-    | **Date** | YYYY-MM-DD |
-    | **Scope** | Privacy Policy / ToS / other |
+| Field | Value |
+|---|---|
+| **Reviewer** | Karl (Orchestrator, self-review — personal project; NOT attorney-reviewed) |
+| **Date** | 2026-08-02 |
+| **Scope** | PRIVACY_POLICY.md (AI-drafted, self-reviewed) + LICENSE (MIT). ToS: N/A (no accounts, no service terms). |
+| **Notes** | DocNote collects/transmits/stores NO data off the user's device (client-side only). The Privacy Policy accurately describes nil data practices. Per the framework's legal notices, the AI-drafted policy is NOT a substitute for attorney review and must be reviewed by counsel before any commercial/organizational deployment; acceptable for a personal open-source tool. data_classification=internal reflects in-memory handling of the user's own documents, not server-side collection. |
 
 ---
 

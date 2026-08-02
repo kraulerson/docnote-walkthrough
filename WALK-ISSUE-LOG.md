@@ -327,3 +327,41 @@ Severity: Minor (didn't block; but complete-step succeeding on a null feature,
 and reset being un-runnable non-interactively, are both rough edges)
 Resolution: documented-path (committed remediation as fix:, which the gate allows)
 Time lost: 3
+
+---
+
+### SMOOTH — Phase 3 validation driver + attestation flow
+When: 2026-08-02 ~13:50 | Where: Phase 3 (scripts/run-phase3-validation.sh)
+The 5-scanner driver is excellent: it ran semgrep-full-tree and license for
+real (both PASS), and for the two I genuinely couldn't run (snyk unauth, ZAP
+needs Docker+a live URL) it gave an exact `--attest <scanner> --reason`
+command that records a signed skip to phase-state.json. That's honest
+governance — I couldn't silently skip, and the summary shows "SKIP(attested)".
+threat-model FAILed until I wrote the required *_threat-model-validation.md
+covering all 9 TM-IDs, then PASSed. Lighthouse gave a11y=100/perf=98.
+
+### ISSUE-013 — legal_review gate demands a Privacy Policy for a zero-collection local tool
+When: 2026-08-02 ~14:05 | Where: process-checklist phase3_validation:legal_review
+Expected: For a Light-track personal tool that collects/transmits NO data
+(everything is client-side in the user's browser), I expected legal review to
+be a quick N/A.
+Actual: The step is FAIL-CLOSED on data_classification: because I truthfully
+set data_classification='internal' in Phase 1 (the app handles the user's own
+internal-sensitivity documents in memory), the gate refused to complete
+without a PRIVACY_POLICY.md:
+  "[WARN] data_classification='internal' ... but NO privacy policy or ToS
+   exists — legal review cannot be skipped by not writing the documents
+   (fail closed)."
+It also (correctly) can't obtain the attorney review the framework's legal
+notices mandate. For a genuinely local no-server tool this feels heavy — a
+privacy policy conventionally describes what a SERVICE collects, and DocNote
+collects nothing. BUT the fail-closed stance is defensible (the app does
+handle internal data), and it pushed me to write an honest nil-collection
+policy, which is arguably good practice. The confusing part is the coupling:
+classification is about in-memory handling, but the gate treats it as
+service-data-collection and demands service-style legal docs.
+Severity: Confusion (proceeded via the documented path — wrote the artifact)
+Resolution: documented-path (wrote PRIVACY_POLICY.md describing nil data
+practices + recorded self-review in APPROVAL_LOG with the attorney-review
+caveat; step completed normally, no force-override)
+Time lost: 8

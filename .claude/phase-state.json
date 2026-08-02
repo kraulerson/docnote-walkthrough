@@ -12,5 +12,19 @@
     "phase_1_to_2": "2026-08-02",
     "phase_2_to_3": "2026-08-02",
     "phase_3_to_4": null
+  },
+  "phase3": {
+    "attestations": {
+      "snyk": {
+        "reason": "Snyk CLI is not authenticated in this walkthrough environment (browser OAuth required, cannot complete autonomously — see WALK-ISSUE-LOG ISSUE-002). npm audit --omit=dev is the active dependency control and reports 0 vulnerabilities; deps are exact-pinned with a committed lockfile.",
+        "signoff": "Karl Raulerson <kraulerson@gmail.com>",
+        "at": "2026-08-02T19:55:54Z"
+      },
+      "zap-dast": {
+        "reason": "OWASP ZAP DAST could not run: Docker is not running in this environment and the app is not yet deployed (no live target URL). Static GitHub Pages app; production security headers (meta-CSP present in dist/index.html) to be verified with 'curl -I' against the live URL at go-live per web module §5.2. Manual DAST deferred to first deploy.",
+        "signoff": "Karl Raulerson <kraulerson@gmail.com>",
+        "at": "2026-08-02T19:55:54Z"
+      }
+    }
   }
 }
