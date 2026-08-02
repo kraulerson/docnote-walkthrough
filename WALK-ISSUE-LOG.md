@@ -365,3 +365,35 @@ Resolution: documented-path (wrote PRIVACY_POLICY.md describing nil data
 practices + recorded self-review in APPROVAL_LOG with the attorney-review
 caveat; step completed normally, no force-override)
 Time lost: 8
+
+---
+
+### SMOOTH — the 6-reviewer suite caught a SEV-1 my own fix missed (highest-value moment)
+When: 2026-08-02 ~14:30 | Where: Phase 3 evaluation prompts
+The single most valuable thing the framework did all walk: the Red Team review
+(evaluation-prompts/Projects, redteam base + web-app module) found RT-01 — my
+BUG-1 decompression-bomb guard trusted the ZIP central directory's ADVERTISED
+uncompressed size, so a crafted .docx that LIES about its size sailed past the
+guard while JSZip still inflated the real multi-GB payload. It re-opened the
+exact SEV-1 DoS the guard existed to prevent, and it proved it with a probe.
+The security reviewer independently flagged the same thing but rated it Low;
+the red-team reviewer correctly escalated it to a ship-blocker under the
+project's own SEV-1 policy. I fixed it properly (bounded actual inflation via
+DecompressionStream). This is the framework's adversarial-review design working
+exactly as intended — an independent perspective caught a real hole a
+self-review (mine) had rationalized as "good enough." compose.sh + the base/
+module split made generating all 6 reviews trivial.
+
+### ISSUE-014 — Phase 3 reviewer suite: run-reviews.sh vs. agent dispatch
+When: 2026-08-02 ~14:15 | Where: evaluation-prompts/Projects/run-reviews.sh
+Expected: run-reviews.sh orchestrates the 6 reviews.
+Actual: run-reviews.sh launches nested `claude -p` CLI instances. From inside
+an autonomous agent session that's fragile (nested headless auth/sessions), so
+I instead used compose.sh to generate each reviewer prompt and dispatched 6
+subagents, then hand-assembled docs/eval-results/review-manifest.json (validated
+clean by scripts/lint-review-manifest.sh). Worked well, but a note for the
+docs: the "run all 6" path assumes an interactive shell, not an agent already
+running inside Claude Code. The manifest schema + linter are solid.
+Severity: Minor (achieved the same outcome a different documented way — compose.sh)
+Resolution: documented-path (compose.sh + subagents + lint-review-manifest.sh)
+Time lost: 5

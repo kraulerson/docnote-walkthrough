@@ -1,0 +1,13 @@
+{
+  "project": "docnote-walkthrough",
+  "module": "web-app",
+  "date": "2026-08-02",
+  "reviews": [
+    { "reviewer": "Senior Engineer", "status": "complete", "artifact": "docs/eval-results/senior-engineer-review-v1.md", "signed_by": "agent:general-purpose (Phase 3 evaluation)", "date": "2026-08-02" },
+    { "reviewer": "CIO", "status": "complete", "artifact": "docs/eval-results/cio-review-v1.md", "signed_by": "agent:general-purpose (Phase 3 evaluation)", "date": "2026-08-02" },
+    { "reviewer": "Security", "status": "complete", "artifact": "docs/eval-results/security-review-v1.md", "signed_by": "agent:general-purpose (Phase 3 evaluation)", "date": "2026-08-02" },
+    { "reviewer": "Legal", "status": "complete", "artifact": "docs/eval-results/legal-review-v1.md", "signed_by": "agent:general-purpose (Phase 3 evaluation)", "date": "2026-08-02" },
+    { "reviewer": "Technical User", "status": "complete", "artifact": "docs/eval-results/technical-user-review-v1.md", "signed_by": "agent:general-purpose (Phase 3 evaluation)", "date": "2026-08-02" },
+    { "reviewer": "Red Team", "status": "complete", "artifact": "docs/eval-results/red-team-review-v1.md", "signed_by": "agent:general-purpose (Phase 3 evaluation)", "date": "2026-08-02" }
+  ]
+}
