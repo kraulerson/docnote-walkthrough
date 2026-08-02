@@ -20,7 +20,12 @@
     "started_at": null
   },
   "phase2_init": {
-    "steps_completed": [],
+    "steps_completed": [
+      "branch_protection_configured",
+      "branch_protection_verified",
+      "pushed_initial",
+      "remote_repo_created"
+    ],
     "verified": false
   }
 }

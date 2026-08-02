@@ -75,7 +75,7 @@
   },
   "host": "github",
   "mode": "personal",
-  "remote_url": "",
+  "remote_url": "https://github.com/kraulerson/docnote-walkthrough",
   "deployment": "personal",
   "poc_mode": null,
   "enforcement_level": "strict",
