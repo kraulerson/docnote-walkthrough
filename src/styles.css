@@ -331,3 +331,15 @@ mark.hl-blue,
 .note-jump:hover {
   text-decoration: underline;
 }
+
+/* BUG-26: preserve note line breaks and wrap long unbroken strings. */
+.note-text,
+.note-jump {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.highlight-menu-confirm {
+  font-size: 0.85rem;
+  color: #5f0012;
+}

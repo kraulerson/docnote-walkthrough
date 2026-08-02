@@ -65,6 +65,24 @@ for handoff clarity. Categories are ordered by impact severity.
 ### Changed
 
 ### Fixed
+- UAT Session 2 remediation (Features 3-4, found by the exploratory agent + a
+  live browser pass):
+  - BUG-20 (SEV-2): NoteEditor now keyed by target highlight, so switching the
+    editor between highlights never saves one highlight's draft onto another.
+  - BUG-21 (SEV-2): remove-highlight now asks for confirmation when a note
+    would be lost (the MVP Cutline requirement that was under-implemented).
+  - BUG-22 (SEV-3): deleting a note closes its open editor so a stale Save
+    cannot resurrect it.
+  - BUG-23 (SEV-3): the note editor validates and counts the trimmed value it
+    actually saves — a valid 1000-char note with a trailing newline is no
+    longer wrongly blocked.
+  - BUG-25 (SEV-4): opening the color toolbar closes any open highlight menu
+    (never two popovers at once).
+  - BUG-26 (SEV-4): pure setError (outside the state updater); a pristine empty
+    editor no longer shows the empty-error; notes preserve line breaks and wrap
+    long strings.
+  SEV-3 Esc/focus-trap for the new popovers (BUG-24) deferred to Phase 3
+  accessibility with BUG-13/14.
 - UAT Session 1 remediation (found by automated + exploratory + cross-platform
   agents and a live browser pass):
   - BUG-2/3 (SEV-2): count/select only LEAF blocks, so nested table/list

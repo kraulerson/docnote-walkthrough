@@ -105,6 +105,9 @@ export function App() {
       setToolbar({ visible: false });
       return;
     }
+    // BUG-25: a new selection opens the color toolbar — close any open
+    // highlight menu so the two popovers are never shown at once.
+    setActiveHighlightId(null);
     const anchor = anchorFromRange(container, range);
     if (!anchor) {
       setToolbar({ visible: true, hint: HINT_UNANCHORABLE, anchor: null });
@@ -163,27 +166,32 @@ export function App() {
     setActiveHighlightId(null); // close the menu; the editor takes over
   }, []);
 
-  const saveNote = useCallback((id: string, text: string) => {
-    const now = new Date().toISOString();
-    setHighlights((previous) => {
-      if (!previous.some((h) => h.id === id)) {
-        // Highlight was removed while the editor was open — discard gracefully.
+  const saveNote = useCallback(
+    (id: string, text: string) => {
+      // BUG-26: keep the updater pure — decide the missing-highlight case here,
+      // outside setHighlights (updaters are double-invoked under StrictMode).
+      if (!highlights.some((h) => h.id === id)) {
         setError('The highlight for this note no longer exists.');
-        return previous;
+        setNoteEditorFor(null);
+        return;
       }
-      return previous.map((h) =>
-        h.id === id
-          ? {
-              ...h,
-              note: { text, createdAt: h.note?.createdAt ?? now, updatedAt: now },
-              updatedAt: now,
-            }
-          : h,
+      const now = new Date().toISOString();
+      setHighlights((previous) =>
+        previous.map((h) =>
+          h.id === id
+            ? {
+                ...h,
+                note: { text, createdAt: h.note?.createdAt ?? now, updatedAt: now },
+                updatedAt: now,
+              }
+            : h,
+        ),
       );
-    });
-    setNoteEditorFor(null);
-    log('info', 'note.saved', { chars: text.length });
-  }, []);
+      setNoteEditorFor(null);
+      log('info', 'note.saved', { chars: text.length });
+    },
+    [highlights],
+  );
 
   const deleteNote = useCallback((id: string) => {
     setHighlights((previous) =>
@@ -197,6 +205,9 @@ export function App() {
       }),
     );
     setActiveHighlightId(null);
+    // BUG-22: if the editor for this note is open, close it so a stale Save
+    // cannot resurrect the just-deleted note.
+    setNoteEditorFor((current) => (current === id ? null : current));
     log('info', 'note.deleted', {});
   }, []);
 
@@ -236,6 +247,7 @@ export function App() {
                 onPick={onColorPick}
               />
               <HighlightMenu
+                key={activeHighlightId ?? 'none'}
                 highlight={highlights.find((h) => h.id === activeHighlightId) ?? null}
                 onRemove={removeHighlight}
                 onClose={() => setActiveHighlightId(null)}
@@ -244,6 +256,10 @@ export function App() {
               />
               {noteEditorFor !== null && (
                 <NoteEditor
+                  // BUG-20: key by target highlight so switching the editor to a
+                  // different highlight remounts it with that highlight's text,
+                  // never carrying the previous draft.
+                  key={noteEditorFor}
                   initialText={
                     highlights.find((h) => h.id === noteEditorFor)?.note?.text ?? ''
                   }
