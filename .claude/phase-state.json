@@ -1,7 +1,7 @@
 {
   "project": "docnote-walkthrough",
   "framework_version": "1.0",
-  "current_phase": 3,
+  "current_phase": 4,
   "track": "light",
   "deployment": "personal",
   "poc_mode": null,
@@ -11,7 +11,7 @@
     "phase_0_to_1": "2026-08-02",
     "phase_1_to_2": "2026-08-02",
     "phase_2_to_3": "2026-08-02",
-    "phase_3_to_4": null
+    "phase_3_to_4": "2026-08-02"
   },
   "phase3": {
     "attestations": {

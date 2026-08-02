@@ -1,10 +1,12 @@
 name: Release — docnote-walkthrough
 # ─────────────────────────────────────────────────────────────────
-# BEFORE FIRST RELEASE: Search for "TODO" in this file and configure:
-#   - Deployment target (hosting platform, credentials)
-#   - Environment variables and secrets
-# The Phase 3→4 gate will warn if TODOs remain unconfigured.
-# Light-track projects: this pipeline is optional for internal-only use.
+# Static site → GitHub Pages. Triggered by a version tag (v*).
+# Prerequisite: repo Settings → Pages → Source = "GitHub Actions".
+# No secrets are required (Pages uses the workflow's OIDC token).
+# Optional: set repo variable PREVIEW_URL to the live Pages URL to enable
+# the post-deploy OWASP ZAP DAST scan below.
+# NOTE: the actions/*-pages actions below use version tags; pin them to
+# commit SHAs to match the other SHA-pinned actions when convenient.
 # ─────────────────────────────────────────────────────────────────
 
 on:
@@ -14,10 +16,15 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7 (v7.0.1)
@@ -40,12 +47,17 @@ jobs:
         #   Go:       go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest && cyclonedx-gomod app -output sbom.json
         #   .NET:     dotnet tool install --global CycloneDX && dotnet CycloneDX [project].csproj -o sbom.json
 
-      - name: Deploy
-        run: echo "TODO — deploy to hosting platform"
-        # TODO: Deploy to your hosting platform. Examples:
-        #   Vercel:   npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
-        #   Railway:  railway up --service ${{ vars.RAILWAY_SERVICE }}
-        #   Netlify:  npx netlify deploy --prod --dir=dist
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload built site as a Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
 
       - name: DAST scan (OWASP ZAP baseline)
         # Set PREVIEW_URL in repository variables (Settings -> Variables). It must

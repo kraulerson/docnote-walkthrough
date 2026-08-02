@@ -92,6 +92,15 @@ _When this gate is crossed, **append** a completed approval table directly below
 <!-- BL-170-APPEND-DESIGN -->
 _When this gate is crossed, **append** a completed approval table directly below (above this section's closing `---`) — use the shape at the top of this file (artifacts to review: Phase 3 test results in docs/test-results/, go-live checklist). Append-only: never edit a line once pushed._
 
+| Field | Value |
+|---|---|
+| **Gate** | Phase 3 → Phase 4 |
+| **Reviewer** | Karl (Orchestrator, self-review — personal project) |
+| **Date** | 2026-08-02 |
+| **Artifacts reviewed** | Phase 3 validation summary (semgrep-full-tree PASS, license PASS, snyk + zap-dast attested-skip, threat-model PASS); docs/test-results/ (Lighthouse a11y 100 / perf 98, threat-model validation of TM-001..009, integration + chaos summaries, SBOM); 6-reviewer evaluation suite in docs/eval-results/ (Security + Red Team complete); HANDOFF.md, INCIDENT_RESPONSE.md, SECURITY.md, PRIVACY_POLICY.md, USER_GUIDE.md, LICENSE; release.yml (GitHub Pages deploy configured). |
+| **Decision** | Approved |
+| **Notes** | All 31+ bugs resolved incl. the red-team SEV-1 RT-01 decompression-bomb-guard bypass (BUG-32) fixed with bounded actual inflation. No open SEV-1/2/3. 125 tests green, Semgrep 0. snyk + ZAP DAST are signed attested-skips (unauthenticated / Docker+no-live-URL in this environment — see phase-state attestations; ZAP to run against the live Pages URL at go-live). Reviews were run as agent personas (Light-track WARN-only; acceptable). |
+
 ---
 
 ## Phase 4 Completion
