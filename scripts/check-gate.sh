@@ -1,0 +1,478 @@
+#!/usr/bin/env bash
+# scripts/check-gate.sh — host-aware gate remediation helper.
+# Subcommands:
+#   --preflight       dry-run verification (does not modify anything)
+#   --repair          re-apply repo setup from last successful step
+#   --backfill-host   detect and record missing host field in manifest
+#
+# All subcommands operate on the current project (cwd).
+
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# BL-046: uses print_step/ok/fail/info/warn + log_line + prompt_yes_no
+# only — source core subset. Fallback still triggers when lib is missing.
+# shellcheck disable=SC1090
+source "$SCRIPT_DIR/lib/helpers-core.sh" 2>/dev/null || {
+  # Minimal fallback if helpers not available (e.g., pre-init migration scenario)
+  print_step() { echo "[STEP] $*"; }
+  print_ok()   { echo "  [OK] $*"; }
+  print_fail() { echo "[FAIL] $*" >&2; }
+  print_info() { echo "[INFO] $*"; }
+  print_warn() { echo "[WARN] $*"; }
+  log_line()   { :; }
+  # Wave-3 raw-read sweep: prompt_yes_no fallback honors the same
+  # non-interactive hard-N contract as the helpers-core.sh version.
+  # Reached only in pre-init migration scenarios where lib/helpers-core.sh
+  # is absent; behavior must match the canonical helper so the manifest
+  # mutation in --backfill-host below stays consistent.
+  prompt_yes_no() {
+    local message="$1" default_answer="${2:-N}"
+    if [ ! -t 0 ] || [ -n "${CI:-}" ] || [ -n "${SOIF_NONINTERACTIVE:-}" ]; then
+      echo "[WARN] Non-interactive context: skipping prompt (\"$message\") — defaulting to 'N' (caller default '$default_answer' ignored)." >&2
+      return 1
+    fi
+    local reply
+    read -rp "${message}: " reply # lint-raw-read-prompt: allow fallback prompt_yes_no defined inline when lib/helpers-core.sh is absent (pre-init migration scenario); semantically equivalent to lib/helpers-core.sh::prompt_yes_no
+    [ -z "$reply" ] && { case "$default_answer" in [Yy]*) return 0 ;; *) return 1 ;; esac; }
+    case "$reply" in [Nn]*) return 1 ;; *) return 0 ;; esac
+  }
+}
+
+usage() {
+  cat <<'EOM'
+Usage: check-gate.sh <subcommand> [--yes]
+
+Subcommands:
+  --preflight       Dry-run: check current protection status without modifying anything.
+                    Exits 0 if ready to cross Phase 1→2, non-zero if blocked.
+  --repair          Re-run repo setup from last successful step (idempotent).
+                    With --branch-protection-attested (or SOLO_BP_ATTESTED=1):
+                    record the tier-limited branch-protection attestation
+                    post-hoc (host-keyed reason; explicit only — BL-123) so a
+                    project that met the free-tier 403 unattested can recover
+                    without destroy-and-recreate.
+  --backfill-host   Infer host from git remote URL and write to manifest.
+
+Flags:
+  --yes, -y         Skip confirmation prompts (for non-interactive use,
+                    e.g. CI or scripted setup). Currently honored by
+                    --backfill-host.
+EOM
+}
+
+_require_manifest() {
+  if [ ! -f .claude/manifest.json ]; then
+    print_fail ".claude/manifest.json not found — run this in a solo-orchestrator project root"
+    return 1
+  fi
+}
+
+cmd_preflight() {
+  _require_manifest || return 1
+  print_step "Preflight: checking protection status"
+
+  # BL-002: honor a recorded `github_free_tier` (or `other_host_attestation`)
+  # branch-protection attestation from process-state.json. When the project
+  # was init'd against a tier-limited host, host_verify_protection has
+  # nothing to verify — the attestation IS the gate.
+  #
+  # BL-032: `gitlab_free_tier_approvals` is the GitLab analog — set when
+  # the operator pre-attests via --approvals-attested for gitlab.com Free
+  # org-mode projects (approvals PUT is Premium-only). Honored here the
+  # same way `github_free_tier` is: the attestation IS the gate, no API
+  # verify possible.
+  local attest_reason=""
+  if [ -f .claude/process-state.json ]; then
+    attest_reason=$(jq -r '.phase2_init.attestations.branch_protection.reason // ""' \
+                       .claude/process-state.json 2>/dev/null || echo "")
+  fi
+  if [ "$attest_reason" = "github_free_tier" ]; then
+    print_ok "Ready: branch protection attested (reason: github_free_tier — upgrade to GitHub Pro to enable API enforcement)"
+    return 0
+  fi
+  if [ "$attest_reason" = "gitlab_free_tier_approvals" ]; then
+    print_ok "Ready: branch protection attested (reason: gitlab_free_tier_approvals — set required-approvals manually via GitLab Settings > Merge requests, or upgrade to Premium for API enforcement)"
+    return 0
+  fi
+
+  # shellcheck disable=SC1090
+  source "$SCRIPT_DIR/lib/host.sh"
+  host_load_driver || {
+    print_fail "Dispatcher load failed — check manifest host field (scripts/check-gate.sh --backfill-host)"
+    return 1
+  }
+  local mode
+  mode=$(jq -r '.mode // "personal"' .claude/manifest.json)
+  if host_verify_protection "main" "$mode"; then
+    print_ok "Ready: protection verified for $mode mode"
+    return 0
+  fi
+  print_fail "Not ready: protection verification failed (see rules above)"
+  return 1
+}
+
+cmd_backfill_host() {
+  _require_manifest || return 1
+  local url
+  url=$(git remote get-url origin 2>/dev/null) || {
+    print_fail "No git remote configured — cannot infer host"
+    return 1
+  }
+  local inferred
+  case "$url" in
+    *github.com*)    inferred="github" ;;
+    *gitlab*)        inferred="gitlab" ;;
+    *bitbucket.org*) inferred="bitbucket" ;;
+    *)               inferred="other" ;;
+  esac
+  print_info "Inferred host '$inferred' from origin URL: $url"
+  local yn
+  if [ "${ASSUME_YES:-0}" = "1" ]; then
+    yn="y"
+    print_info "Auto-confirmed via --yes."
+  else
+    # Wave-3 raw-read sweep: prompt_yes_no honors !-t 0 / CI /
+    # SOIF_NONINTERACTIVE and hard-returns N rather than auto-Y'ing
+    # a manifest mutation in CI.
+    if prompt_yes_no "Confirm this is correct? [y/N]" "N"; then
+      yn="y"
+    else
+      yn="n"
+    fi
+  fi
+  case "$yn" in
+    [yY]*)
+      jq --arg h "$inferred" '.host = $h' .claude/manifest.json > .claude/manifest.json.tmp \
+        && mv .claude/manifest.json.tmp .claude/manifest.json
+      print_ok "Host field written to manifest as '$inferred'"
+      ;;
+    *)
+      print_fail "Aborted — no changes made. Manually set the host field if different."
+      return 1
+      ;;
+  esac
+}
+
+cmd_repair() {
+  _require_manifest || return 1
+  print_step "Repair: re-applying repo setup from last successful step"
+
+  # Audit finding specs-plans-host-aware-11: honor the spec contract by
+  # consulting phase2_init.steps_completed before running any host_ call.
+  # init.sh writes the four named steps (remote_repo_created, pushed_initial,
+  # branch_protection_configured, branch_protection_verified) incrementally
+  # via _record_phase2_step, so a mid-flight failure leaves accurate state
+  # and --repair can resume from the first missing step.
+  #
+  # PR #97 verifier follow-up: after each successful resume step, --repair
+  # writes the matching step back to steps_completed via _record_phase2_step
+  # (shared with init.sh via scripts/lib/phase2-state.sh). Without write-back
+  # the state file became a lying source of truth — subsequent --repair calls
+  # would re-hit the host API for already-completed work and any consumer
+  # reading steps_completed would see stale data.
+  #
+  # The git-remote probe below remains as a defensive fallback for legacy
+  # projects (those init'd before incremental writes landed) — when
+  # steps_completed is empty/missing we infer "remote_repo_created" from
+  # `git remote get-url origin` succeeding.
+  # shellcheck disable=SC1090
+  source "$SCRIPT_DIR/lib/phase2-state.sh"
+
+  local steps_json="[]"
+  local has_state=0
+  if [ -f .claude/process-state.json ]; then
+    steps_json=$(jq -c '.phase2_init.steps_completed // []' .claude/process-state.json 2>/dev/null || echo "[]")
+    has_state=1
+  fi
+  _step_done() {
+    local s="$1"
+    echo "$steps_json" | jq -e --arg s "$s" 'index($s) != null' >/dev/null 2>&1
+  }
+  # _refresh_steps_json — pull the latest steps_completed off disk so the
+  # in-memory cache stays in sync after a _record_phase2_step write. Cheap
+  # (one jq + one read) and called only after each successful resume step.
+  _refresh_steps_json() {
+    if [ -f .claude/process-state.json ]; then
+      steps_json=$(jq -c '.phase2_init.steps_completed // []' .claude/process-state.json 2>/dev/null || echo "[]")
+    fi
+  }
+
+  # BL-157-REMOTE-MARKER-BEGIN
+  # BL-157: a scaffold created with `init.sh --no-remote-creation` whose
+  # operator later wired `origin` by hand and pushed never gets
+  # remote_repo_created / pushed_initial recorded — init.sh's recorder only
+  # fires on the API-create path that flag skipped. The BL-123 post-hoc
+  # attestation block just below REFUSES until those two markers are on record,
+  # so a free-tier operator was forced into an undocumented two-step: a plain
+  # `--repair` (which reconciles the markers via Steps 1-2 and then re-hits the
+  # 403), and only THEN `--repair --branch-protection-attested`.
+  #
+  # Reconcile the markers HERE, in the repair preflight, BEFORE the BL-123
+  # block runs — so a single `--repair --branch-protection-attested` succeeds
+  # when the remote is genuinely present. GENUINE detection only, never an
+  # assumption: remote_repo_created is recorded only when the configured
+  # `origin` answers `git ls-remote` (the repo provably exists on the host);
+  # pushed_initial only when that remote actually carries the project's branch
+  # head (current branch, else main/master — the same `git ls-remote --heads
+  # origin` primitive the check-phase-gate.sh BL-084 push backstop uses). A
+  # truly remote-less project (no `origin`, or an `origin` with no pushed
+  # branch) records NOTHING here, so the BL-123 refusal below stays exactly as
+  # designed — this SATISFIES the precondition when it is legitimately met, it
+  # does not weaken the guard. Idempotent (skips already-recorded steps) and
+  # provenance-consistent with the BL-123 recorder (writes through the shared
+  # _record_phase2_step helper).
+  if ! _step_done "remote_repo_created" || ! _step_done "pushed_initial"; then
+    local _bl157_heads _bl157_branch _bl157_cand _bl157_sha
+    if git remote get-url origin >/dev/null 2>&1 \
+       && _bl157_heads=$(git ls-remote --heads origin 2>/dev/null); then
+      # The configured remote answered ls-remote — the repo genuinely exists.
+      if ! _step_done "remote_repo_created"; then
+        _record_phase2_step "remote_repo_created"
+        _refresh_steps_json
+        print_info "Repair: recorded remote_repo_created — configured 'origin' answers ls-remote (repo exists on host). [BL-157]"
+      fi
+      # pushed_initial only if that remote actually carries OUR branch head.
+      # BL-157 (verifier HIGH-1/2): match the branch EXACTLY via an awk field
+      # compare — NOT a grep BRE, where a branch name with regex metacharacters
+      # (`rel/1.x`) would launder a lookalike (`rel/1yx`) — AND require the
+      # matched remote head to be a commit THIS repo holds locally
+      # (`cat-file -e … ^{commit}`). Name-existence alone let a same-named but
+      # UNPUSHED remote branch (GitHub's "Initialize with README" default `main`,
+      # disjoint history) satisfy the marker with zero project code on the host,
+      # then earn the BL-123 attestation AND the BL-116 push-gate exemption. A
+      # genuine push guarantees the shared commit; an unrelated auto-init does
+      # not — so this records only when the code was really pushed.
+      if ! _step_done "pushed_initial"; then
+        _bl157_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+        for _bl157_cand in "$_bl157_branch" main master; do
+          [ -z "$_bl157_cand" ] && continue
+          [ "$_bl157_cand" = "HEAD" ] && continue
+          _bl157_sha=$(printf '%s\n' "$_bl157_heads" \
+            | awk -v r="refs/heads/$_bl157_cand" '$2 == r { print $1; exit }')
+          [ -z "$_bl157_sha" ] && continue
+          git cat-file -e "$_bl157_sha^{commit}" 2>/dev/null || continue
+          _record_phase2_step "pushed_initial"
+          _refresh_steps_json
+          print_info "Repair: recorded pushed_initial — 'origin' carries our pushed '$_bl157_cand' head ($(printf '%.7s' "$_bl157_sha")). [BL-157]"
+          break
+        done
+      fi
+    fi
+  fi
+  # BL-157-REMOTE-MARKER-END
+
+  # BL-123-BP-ATTEST-RECORD-BEGIN
+  # BL-123 / BL-111: an attestation-RECORDING path for --repair. The
+  # tier-limited attestation used to be writable ONLY inside init.sh's
+  # in-flight 403 fallback, so an unattested first contact with the 403 was
+  # unrecoverable: --repair re-hit the 403 and recommended a flag only
+  # init.sh accepted, and re-running init.sh died on "Name already exists"
+  # (Dogfood-2 F-DF2-002; BL-111 is the hermetic sibling). Accepting
+  # `--branch-protection-attested` (or SOLO_BP_ATTESTED=1) here records the
+  # SAME shape init.sh writes — attested_by/at/host-keyed reason plus the two
+  # bp step records — and the attested short-circuit below then fires before
+  # any host API call. EXPLICIT ONLY: never inferred, never defaulted;
+  # idempotent (skipped when an attestation already exists).
+  local _bp_want=0 _bp_arg
+  for _bp_arg in "$@"; do
+    case "$_bp_arg" in
+      --branch-protection-attested) _bp_want=1 ;;
+    esac
+  done
+  [ "${SOLO_BP_ATTESTED:-0}" = "1" ] && _bp_want=1
+  if [ "$_bp_want" -eq 1 ] && [ -f .claude/process-state.json ]; then
+    local _bp_existing_at _bp_existing_reason _bp_host _bp_reason
+    # Idempotency keys on the attestation's PRESENCE (.at), not on .reason —
+    # init.sh's 'other'-host attestation is reasonless, and a healthy attested
+    # project + the flag must be a no-op, never a refusal (verifier finding C).
+    _bp_existing_at=$(jq -r '.phase2_init.attestations.branch_protection.at // ""' \
+                        .claude/process-state.json 2>/dev/null || echo "")
+    _bp_existing_reason=$(jq -r '.phase2_init.attestations.branch_protection.reason // ""' \
+                            .claude/process-state.json 2>/dev/null || echo "")
+    if [ -n "$_bp_existing_at" ]; then
+      print_info "Repair: attestation already recorded (reason: ${_bp_existing_reason:-none — manual-host shape}) — --branch-protection-attested is a no-op."
+    elif ! _step_done "remote_repo_created" || ! _step_done "pushed_initial"; then
+      # Verifier finding A: the recorder must mirror the attested
+      # short-circuit's preconditions. init.sh's 403 fallback is only
+      # reachable AFTER create+push succeeded; recording without them would
+      # let 3 of 4 consumers honor a branch-protection attestation on a
+      # project with no pushed remote at all — a laundered gate.
+      # BL-157-REMOTE-MARKER: with the preflight reconciler above, this refusal
+      # now fires ONLY for a genuinely remote-less project (no `origin`, or an
+      # `origin` with no pushed branch) — the guard is intact, we simply have
+      # nothing legitimate to reconcile from. Name the exact recovery command
+      # so the operator is not left guessing (BL-157 message ask).
+      print_fail "Post-hoc attestation preconditions unmet: no pushed remote branch detected on 'origin' (remote_repo_created / pushed_initial are not on record, and the repair preflight found no repo+branch to reconcile them from — BL-157). The attestation covers the protection TIER, not the remote's existence. Create and push the remote first, e.g.:  git push -u origin main   then re-run:  scripts/check-gate.sh --repair --branch-protection-attested"
+      return 1
+    else
+      _bp_host=$(jq -r '.host // ""' .claude/manifest.json 2>/dev/null || echo "")
+      case "$_bp_host" in
+        github) _bp_reason="github_free_tier" ;;
+        gitlab) _bp_reason="gitlab_free_tier_approvals" ;;
+        *)
+          print_fail "Post-hoc branch-protection attestation is host-keyed (github/gitlab tier-limited plans); manifest host is '${_bp_host:-unset}'."
+          return 1 ;;
+      esac
+      # recorded_via: the provenance discriminator (verifier finding B) — an
+      # auditor must be able to tell a witnessed-at-403 init-time attestation
+      # from a post-hoc one recorded through this repair path.
+      jq --arg at "$(date -u +%FT%TZ)" --arg reason "$_bp_reason" \
+         '.phase2_init.attestations.branch_protection = {attested_by: "orchestrator", at: $at, reason: $reason, recorded_via: "check-gate-repair"}' \
+         .claude/process-state.json > .claude/process-state.json.tmp \
+         && mv .claude/process-state.json.tmp .claude/process-state.json
+      _record_phase2_step "branch_protection_configured"
+      _record_phase2_step "branch_protection_verified"
+      _refresh_steps_json
+      print_ok "Repair: branch-protection attestation RECORDED post-hoc (reason: $_bp_reason — upgrade the host plan to enable API enforcement; recorded_via: check-gate-repair). Explicit operator attestation; recorded to .claude/process-state.json."
+    fi
+  fi
+  # BL-123-BP-ATTEST-RECORD-END
+
+  # Honor a recorded tier-limited attestation (spec category 6 / BL-002).
+  # If the operator attested branch protection at init time, --repair has
+  # nothing further to do — the attestation IS the gate. This mirrors
+  # cmd_preflight's branch and keeps the two subcommands consistent.
+  #
+  # PR #97 verifier defensive fix: also require remote_repo_created AND
+  # pushed_initial to be recorded before short-circuiting on attestation.
+  # Today init.sh's write ordering guarantees both are set before the
+  # attestation is recorded, but coupling cmd_repair's correctness to
+  # init.sh's internal ordering is fragile — a future change that records
+  # attestation earlier (e.g., for prompt UX) would silently break --repair
+  # for broken-but-attested projects. The two extra checks make the
+  # short-circuit self-justifying instead of order-dependent.
+  local attest_reason=""
+  if [ "$has_state" -eq 1 ]; then
+    attest_reason=$(jq -r '.phase2_init.attestations.branch_protection.reason // ""' \
+                       .claude/process-state.json 2>/dev/null || echo "")
+  fi
+  if [ "$attest_reason" = "github_free_tier" ] \
+     && _step_done "remote_repo_created" \
+     && _step_done "pushed_initial"; then
+    print_ok "Repair: nothing to do — branch protection attested (reason: github_free_tier)"
+    return 0
+  fi
+  # BL-032: same short-circuit for the GitLab Free tier approvals
+  # attestation reason.
+  if [ "$attest_reason" = "gitlab_free_tier_approvals" ] \
+     && _step_done "remote_repo_created" \
+     && _step_done "pushed_initial"; then
+    print_ok "Repair: nothing to do — branch protection attested (reason: gitlab_free_tier_approvals)"
+    return 0
+  fi
+
+  # No all-four-steps short-circuit (PR #97 verifier Issue #3 — option A).
+  # Pre-fix the early return at the top of cmd_repair conflicted with the
+  # "always re-run verify so the gate sees fresh state" comment further
+  # down: in the common case (full success) verify was never re-run because
+  # the short-circuit fired first, so drift detection on repair was
+  # silently dead. Drift detection is also cmd_preflight's job, but having
+  # --repair always probe live state matches the documented intent and
+  # costs one extra API call per repair invocation. The per-step skips
+  # below keep the create/push/configure work idempotent (no redundant API
+  # writes) — only the verify GET is repeated when all four are done.
+
+  # shellcheck disable=SC1090
+  source "$SCRIPT_DIR/lib/host.sh"
+  host_load_driver || {
+    print_fail "Dispatcher load failed — run --backfill-host first"
+    return 1
+  }
+  local mode
+  mode=$(jq -r '.mode // "personal"' .claude/manifest.json)
+
+  # Step 1: remote_repo_created. Skip if steps_completed says done, OR (legacy
+  # fallback) if `git remote get-url origin` succeeds on a project that
+  # predates incremental writes (has_state=0). In the legacy-fallback case
+  # we record the step on first --repair so the state file stops lying.
+  if _step_done "remote_repo_created"; then
+    print_info "Skipping create — already recorded"
+  elif git remote get-url origin >/dev/null 2>&1; then
+    print_info "Skipping create — remote already configured (legacy project, recording step)"
+    _record_phase2_step "remote_repo_created"
+    _refresh_steps_json
+  else
+    local name visibility
+    if [ -f .claude/intake-progress.json ]; then
+      name=$(jq -r '.answers.project_name // empty' .claude/intake-progress.json)
+      visibility=$(jq -r '.answers.repo_visibility // "private"' .claude/intake-progress.json)
+    fi
+    name="${name:-$(basename "$(pwd)")}"
+    visibility="${visibility:-private}"
+    print_info "Creating $visibility repo '$name' on $(host_name)..."
+    local url
+    url=$(host_create_repo "$name" "$visibility") || { print_fail "Repo creation failed"; return 1; }
+    host_register_remote "$url"
+    _record_phase2_step "remote_repo_created"
+    _refresh_steps_json
+    print_ok "Remote created at $url"
+  fi
+
+  # Step 2: pushed_initial. Skip if recorded, else attempt push (idempotent
+  # at the git layer — a no-op if remote is already in sync).
+  if _step_done "pushed_initial"; then
+    print_info "Skipping push — already recorded"
+  else
+    host_push_initial main 2>/dev/null || host_push_initial master || {
+      print_fail "Push failed — see driver error above"
+      return 1
+    }
+    _record_phase2_step "pushed_initial"
+    _refresh_steps_json
+    print_ok "Initial push complete"
+  fi
+
+  # Step 3: branch_protection_configured. Skip if recorded.
+  if _step_done "branch_protection_configured"; then
+    print_info "Skipping configure — protection already recorded"
+  else
+    print_info "Re-applying protection for $mode mode..."
+    host_configure_protection main "$mode" 2>/dev/null || host_configure_protection master "$mode" \
+      || { print_fail "Protection config failed"
+           # BL-157-REMOTE-MARKER: on a tier-limited host (free-tier 403 on the
+           # protection API) remote_repo_created/pushed_initial are already on
+           # record by now (recorded by init.sh's push, or reconciled in the
+           # BL-157 preflight above), so the operator can record the
+           # tier-limited attestation in ONE more step. Pre-BL-157 the first
+           # `--repair` never named the flag to add — the BL-157 message ask.
+           print_info "If the host rejected the protection API (free-tier 403 'Upgrade to…' on GitHub private repos, or GitLab Premium-only approvals), the create/push markers are on record — record the tier-limited attestation with:  scripts/check-gate.sh --repair --branch-protection-attested"
+           return 1; }
+    _record_phase2_step "branch_protection_configured"
+    _refresh_steps_json
+  fi
+
+  # Step 4: branch_protection_verified. Always re-run verify on repair so the
+  # gate sees fresh state, even if steps_completed says verified — protection
+  # may have drifted since the original write. With the all-4 short-circuit
+  # removed above, this verify also runs on the "everything already done"
+  # path, which is the documented behavior the PR #97 bonus-catch claimed.
+  if ! host_verify_protection main "$mode" 2>/dev/null && ! host_verify_protection master "$mode"; then
+    sleep 5
+    host_verify_protection main "$mode" 2>/dev/null || host_verify_protection master "$mode" \
+      || { print_fail "Verification still failing — check host UI"; return 1; }
+  fi
+  # Record verification last — only after the GET above confirmed live
+  # state matches the configured rules. Idempotent via the `unique` filter
+  # in _record_phase2_step (no duplicates accumulate on re-runs).
+  _record_phase2_step "branch_protection_verified"
+  print_ok "Repair complete"
+}
+
+ASSUME_YES=0
+ARGS=()
+for arg in "$@"; do
+  case "$arg" in
+    --yes|-y) ASSUME_YES=1 ;;
+    *)        ARGS+=("$arg") ;;
+  esac
+done
+set -- ${ARGS[@]+"${ARGS[@]}"}
+
+case "${1:-}" in
+  --preflight)     shift || true; cmd_preflight "$@" ;;
+  --repair)        shift || true; cmd_repair "$@" ;;
+  --backfill-host) shift || true; cmd_backfill_host "$@" ;;
+  -h|--help|"")    usage; exit 0 ;;
+  *)               echo "Unknown subcommand: $1" >&2; usage; exit 1 ;;
+esac

@@ -1,0 +1,145 @@
+---
+project: docnote-walkthrough
+deployment: personal
+created: 2026-08-02
+framework: Solo Orchestrator v1.0
+---
+
+# Approval Log — docnote-walkthrough
+
+This document records phase gate reviews for this project. For personal projects, the Orchestrator serves as their own reviewer. Record each phase transition to maintain a log of what was reviewed and when.
+
+<!-- BL-170-APPEND-DESIGN: append-only recording contract for every gate/section below. -->
+
+**Recording an approval — append, never edit.** This log is append-only once pushed: the CI *Approval log integrity* job fails any commit that modifies or deletes a line already committed to `APPROVAL_LOG.md`. So do **not** fill a section's table in place. When you cross a gate (or complete a section below), **append** a completed copy of the shape below directly under that section's header, then commit — and never touch a line once it is committed:
+
+```
+| Field | Value |
+|---|---|
+| **Gate** | Phase N → Phase N+1 |
+| **Reviewer** | your name |
+| **Date** | YYYY-MM-DD |
+| **Artifacts reviewed** | the artifacts reviewed for this gate |
+| **Decision** | Approved |
+| **Notes** | optional notes |
+```
+
+---
+
+## Pre-Phase 0: Pre-Conditions
+
+| # | Pre-Condition | Status | Date | Notes |
+|---|---|---|---|---|
+| 1 | AI deployment path | N/A — personal project | 2026-08-02 | |
+| 2 | Insurance coverage | N/A — personal project | 2026-08-02 | |
+| 3 | Liability entity | N/A — personal project | 2026-08-02 | |
+| 4 | Project sponsor | N/A — personal project | 2026-08-02 | |
+| 5 | Backup maintainer | N/A — personal project | 2026-08-02 | |
+| 6 | ITSM registration | N/A — personal project | 2026-08-02 | |
+
+---
+
+## Phase Gate: Phase 0 → Phase 1
+
+<!-- BL-170-APPEND-DESIGN -->
+_When this gate is crossed, **append** a completed approval table directly below (above this section's closing `---`) — use the shape at the top of this file (artifacts to review: PRODUCT_MANIFESTO.md). Append-only: never edit a line once pushed._
+
+---
+
+## Phase Gate: Phase 1 → Phase 2
+
+<!-- BL-170-APPEND-DESIGN -->
+_When this gate is crossed, **append** a completed approval table directly below (above this section's closing `---`) — use the shape at the top of this file (artifacts to review: PROJECT_BIBLE.md, Threat Model). Append-only: never edit a line once pushed._
+
+---
+
+## Phase Gate: Phase 2 → Phase 3
+
+<!-- BL-170-APPEND-DESIGN -->
+_When this gate is crossed, **append** a completed approval table directly below (above this section's closing `---`) — use the shape at the top of this file (artifacts to review: construction artifacts — code, tests, ADRs). Append-only: never edit a line once pushed._
+
+---
+
+## Phase Gate: Phase 3 → Phase 4
+
+<!-- BL-170-APPEND-DESIGN -->
+_When this gate is crossed, **append** a completed approval table directly below (above this section's closing `---`) — use the shape at the top of this file (artifacts to review: Phase 3 test results in docs/test-results/, go-live checklist). Append-only: never edit a line once pushed._
+
+---
+
+## Phase 4 Completion
+
+_Record after deployment and go-live verification._
+
+<!-- BL-170-APPEND-DESIGN -->
+_Append a completed copy of the shape below when Phase 4 is done. Append-only: never edit a line once pushed._
+
+    | Field | Value |
+    |---|---|
+    | **Deployment Date** | YYYY-MM-DD |
+    | **Go-Live Verified** | Yes |
+    | **Rollback Tested** | Yes |
+    | **Monitoring Verified** | Yes |
+    | **Handoff Document** | HANDOFF.md completed |
+    | **Notes** | optional notes |
+
+---
+
+## Approval History
+
+<!-- BL-170-APPEND-DESIGN -->
+_Append one row per post-launch change, maintenance review, or re-approval below. Append-only: never edit a row once pushed._
+
+| Date | Gate / Event | Decision | Notes |
+|---|---|---|---|
+
+---
+
+## UAT Sign-off (Step 3.6 — final acceptance)
+
+<!-- BL-105: the formal acceptance sign-off the guide requires. A dated row
+     below is the evidence the gate reads; the section header alone is
+     template scaffolding, not evidence (BL-115 discipline). -->
+
+<!-- BL-170-APPEND-DESIGN -->
+_Append a completed copy of the shape below at final acceptance. Append-only: never edit a line once pushed._
+
+    | Field | Value |
+    |---|---|
+    | **Signed off by** | the accepting operator/stakeholder |
+    | **Date** | YYYY-MM-DD |
+    | **Session(s)** | UAT session ids covered |
+    | **Notes** | open items accepted as-is, if any |
+
+---
+
+## Attorney / Legal Review (if applicable)
+
+<!-- BL-105/BL-115: required whenever legal documents exist or the data
+     classification is non-public — the personal template lacked this slot
+     while the track-keyed gates demand it (template chosen by deployment,
+     gates keyed by track). A DATED row is the evidence. -->
+
+<!-- BL-170-APPEND-DESIGN -->
+_Append a completed copy of the shape below when legal review occurs. Append-only: never edit a line once pushed._
+
+    | Field | Value |
+    |---|---|
+    | **Reviewer** | Attorney / firm name |
+    | **Date** | YYYY-MM-DD |
+    | **Scope** | Privacy Policy / ToS / other |
+
+---
+
+## Penetration Test (if applicable)
+
+<!-- BL-105: required on the Full track regardless of deployment. -->
+
+<!-- BL-170-APPEND-DESIGN -->
+_Append a completed copy of the shape below when a penetration test is performed. Append-only: never edit a line once pushed._
+
+    | Field | Value |
+    |---|---|
+    | **Tester** | person / firm |
+    | **Date** | YYYY-MM-DD |
+    | **Report** | docs/test-results/YYYY-MM-DD_pen-test.md |
