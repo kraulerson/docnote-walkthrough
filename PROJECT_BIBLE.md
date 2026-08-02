@@ -1,6 +1,6 @@
 # Project Bible — DocNote (docnote-walkthrough)
 
-<!-- Last Updated: 2026-08-02 (Phase 2 — UAT Session 2 remediation complete) -->
+<!-- Last Updated: 2026-08-02 (Phase 2 — Feature 5 notes-panel-jump complete) -->
 
 **Status:** Approved (Phase 1 → 2 gate)
 **Approved By:** Karl (Orchestrator, self-review — personal project)

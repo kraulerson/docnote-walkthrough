@@ -43,6 +43,10 @@ for handoff clarity. Categories are ordered by impact severity.
   schemaVersion 1) defined in src/core/types.ts. No storage behavior yet.
 
 ### Added
+- Feature 5 — notes-panel-jump: the notes side panel now lists notes in
+  document order, clicking a note scrolls to its highlight and emphasizes it
+  (outline + pulse, not color-only), and a note whose highlight can't be
+  located is kept and marked "⚠ unlocated" (no jump).
 - Feature 4 — notes-crud: attach a plain-text note (1-1000 chars) to a
   highlight via the action menu; edit replaces the text, delete removes the
   note but keeps the highlight. Notes appear in the side panel. Empty/over-

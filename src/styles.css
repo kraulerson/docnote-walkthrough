@@ -343,3 +343,42 @@ mark.hl-blue,
   font-size: 0.85rem;
   color: #5f0012;
 }
+
+/* Feature 5: jump-target emphasis — outline + brief pulse (not color alone). */
+mark.hl-jump-target {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  animation: hl-jump-pulse 1.2s ease-out;
+}
+
+@keyframes hl-jump-pulse {
+  0% {
+    box-shadow: 0 0 0 3px rgba(32, 80, 128, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(32, 80, 128, 0);
+  }
+}
+
+.note-badge {
+  font-size: 0.72rem;
+  color: #5f0012;
+  border: 1px solid #b00020;
+  border-radius: 3px;
+  padding: 0 0.3rem;
+}
+
+.note-card.unlocated .note-text {
+  color: #777;
+}
+
+/* Forced-colors: ensure the jump target stays distinguishable (partial BUG-13
+   groundwork; full forced-colors handling is the Phase 3 accessibility item). */
+@media (forced-colors: active) {
+  mark.hl {
+    border: 1px solid CanvasText;
+  }
+  mark.hl-jump-target {
+    outline: 2px solid Highlight;
+  }
+}

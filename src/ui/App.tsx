@@ -32,6 +32,7 @@ export function App() {
   const [toolbar, setToolbar] = useState<ToolbarState>({ visible: false });
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
   const [noteEditorFor, setNoteEditorFor] = useState<string | null>(null);
+  const [unlocatedIds, setUnlocatedIds] = useState<ReadonlySet<string>>(new Set());
   const documentContainer = useRef<HTMLDivElement | null>(null);
   // BUG-4: monotonic token so a slow parse of an earlier file cannot overwrite
   // the result of a later-picked file (concurrent-open race).
@@ -56,6 +57,7 @@ export function App() {
       setHighlights([]);
       setActiveHighlightId(null);
       setNoteEditorFor(null);
+      setUnlocatedIds(new Set());
       setView({ kind: 'ready', fileName: file.name, document: parsed });
     } catch (caught) {
       if (token !== openToken.current) {
@@ -211,6 +213,31 @@ export function App() {
     log('info', 'note.deleted', {});
   }, []);
 
+  const onUnlocated = useCallback((ids: string[]) => {
+    setUnlocatedIds(new Set(ids));
+  }, []);
+
+  const jumpToHighlight = useCallback((id: string) => {
+    const container = documentContainer.current;
+    if (!container) {
+      return;
+    }
+    const mark = container.querySelector<HTMLElement>(`mark[data-hl-id="${CSS.escape(id)}"]`);
+    if (!mark) {
+      return;
+    }
+    mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Non-color-only emphasis: outline + brief animation via a class.
+    for (const el of container.querySelectorAll('mark.hl-jump-target')) {
+      el.classList.remove('hl-jump-target');
+    }
+    // Every mark segment of this highlight gets the emphasis.
+    for (const el of container.querySelectorAll(`mark[data-hl-id="${CSS.escape(id)}"]`)) {
+      el.classList.add('hl-jump-target');
+    }
+    log('info', 'note.jump', {});
+  }, []);
+
   const setDocumentContainer = useCallback((element: HTMLDivElement | null) => {
     documentContainer.current = element;
   }, []);
@@ -270,13 +297,14 @@ export function App() {
               <DocumentView
                 document={view.document}
                 highlights={highlights}
+                onUnlocated={onUnlocated}
                 containerRef={setDocumentContainer}
               />
             </>
           )}
         </section>
         {view.kind === 'ready' ? (
-          <NotesPanel highlights={highlights} />
+          <NotesPanel highlights={highlights} onJump={jumpToHighlight} unlocatedIds={unlocatedIds} />
         ) : (
           <aside className="notes-panel" aria-label="Notes">
             <h2>Notes</h2>

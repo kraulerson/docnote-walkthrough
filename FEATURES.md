@@ -55,4 +55,16 @@
 
 ---
 
+## Feature 5: notes-panel-jump
+
+**Phase Built:** 2
+**Status:** Complete
+**Summary:** The NotesPanel lists notes in document order (stable sort on paragraphIndex, startOffset); clicking a located note scrolls its highlight into view and applies a non-color-only emphasis (outline + pulse). Highlights whose anchor can't be re-located are surfaced as "⚠ unlocated" and are not clickable. Reported via DocumentView's onUnlocated.
+**Key Interfaces:** src/ui/NotesPanel.tsx, src/ui/App.tsx (`jumpToHighlight`, `onUnlocated`), src/ui/DocumentView.tsx (onUnlocated)
+**Related ADRs:** docs/ADR documentation/ADR-0001-architecture-selection.md
+**Test Coverage:** Component (ordering, jump callback, unlocated badge/no-jump) + App flow (click-to-jump scrolls + emphasizes, two-note document ordering).
+**Known Limitations:** Esc/focus-trap for popovers still deferred (BUG-24, Phase 3 a11y). Full forced-colors treatment beyond the jump target is the Phase 3 accessibility item (BUG-13).
+
+---
+
 <!-- Copy the section above for each new feature. Number sequentially. -->
