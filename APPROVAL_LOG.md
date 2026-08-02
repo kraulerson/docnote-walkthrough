@@ -76,6 +76,15 @@ _When this gate is crossed, **append** a completed approval table directly below
 <!-- BL-170-APPEND-DESIGN -->
 _When this gate is crossed, **append** a completed approval table directly below (above this section's closing `---`) — use the shape at the top of this file (artifacts to review: construction artifacts — code, tests, ADRs). Append-only: never edit a line once pushed._
 
+| Field | Value |
+|---|---|
+| **Gate** | Phase 2 → Phase 3 |
+| **Reviewer** | Karl (Orchestrator, self-review — personal project) |
+| **Date** | 2026-08-02 |
+| **Artifacts reviewed** | All 6 MVP-Cutline features (docx-open-render, highlight-apply, remove-highlight, notes-crud, notes-panel-jump, local-persistence); src/ code + 115 tests; 6 per-feature security audits in docs/security-audits/; FEATURES.md; CHANGELOG.md; BUGS.md (31 bugs across 3 UAT sessions); the 3 UAT sessions in tests/uat/sessions/. |
+| **Decision** | Approved |
+| **Notes** | Bug gate: no open SEV-1/2. 7 open SEV-3 attested and deferred to Phase 3 hardening/accessibility (BUG-9,10,11,12,13,14,24) — tracked in BUGS.md with the "Defer → Phase 3" disposition. Full suite green (115 tests), Semgrep 0 findings, build clean. FEATURES.md matches the MVP Cutline exactly (6/6, no scope additions). All 3 UAT sessions completed with remediation. |
+
 ---
 
 ## Phase Gate: Phase 3 → Phase 4
