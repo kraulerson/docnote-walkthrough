@@ -127,3 +127,50 @@ with the checklist untouched and be blocked confused at commit time.
 Severity: Confusion
 Resolution: documented-path (ran it late; steps completed against real artifacts)
 Time lost: 4
+
+---
+
+### ISSUE-006 — Generated CI fails on first push: phase-gate protection check cannot work in GitHub Actions
+When: 2026-08-02 ~10:05 | Where: first CI run / .github/workflows/ci.yml "Governance - Phase gate check"
+Expected: README: "CI pipelines are working GitHub Actions workflows that run
+immediately on first push." Builder's Guide says the Phase 1->2 backstop
+verifies branch protection and its remediation is `scripts/check-gate.sh
+--repair` / `--preflight`.
+Actual: First CI run FAILED at "Governance - Phase gate check" with
+"[FAIL] Phase 1->2 backstop: protection verification failed". Locally the
+same check passes ("protection verified for personal mode") and
+`check-gate.sh --preflight` reports Ready. Root cause: inside GitHub Actions
+the gate step has no authenticated API access (no GH_TOKEN env is set in the
+generated workflow, and the default workflow token cannot read branch
+protection settings anyway), so the protection backstop can NEVER pass in CI
+on this configuration — the framework's own default happy path (public
+personal GitHub repo created by init.sh itself).
+The remediation the gate prints does not help: there is no drift to repair.
+A real junior would be hard stuck: red CI, a remediation command that
+reports everything is fine, and no doc section connecting the two.
+Severity: Major (proceeded via the documented SOIF_PHASE_GATES=warn knob,
+but only because the User Guide's Tier-1 table mentions it — a junior would
+be unlikely to connect that variable to this failure)
+Resolution: documented-path (set SOIF_PHASE_GATES: "warn" as env on the CI
+phase-gate step only; local gates remain strict; commented in ci.yml)
+Time lost: 20
+
+### SMOOTH — Phase 2 init gates behaved exactly as documented
+When: 2026-08-02 ~09:55-10:05 | Where: Phase 2 initialization
+- Framework blocked my scaffold commit with the documented "Phase 2
+  initialization not verified" message; `--verify-init` auto-detected 5/6
+  steps and told me exactly which one to mark manually. Recovery UX is good.
+- Hook verifications from the init checklist both PROVED out: gitleaks
+  blocked a staged fake AWS key ([BLOCKED] + exit 1) and BL-125 blocked a
+  deliberately failing staged test. Confidence-inspiring.
+- npm install with --save-exact + generated .gitignore + lockfile all fine.
+
+### ISSUE-007 — process-checklist --status shows "Progress: 9/7 steps" for Phase 2 Initialization
+When: 2026-08-02 ~10:02 | Where: scripts/process-checklist.sh --status
+Expected: A step count like 7/7.
+Actual: "Verified: true / Progress: 9/7 steps" — the auto-verifier counts
+steps (e.g. remote_repo_created, branch_protection_configured) that are not
+in the 7-step template, so the numerator exceeds the denominator.
+Severity: Minor (cosmetic; verification itself worked)
+Resolution: documented-path
+Time lost: 1

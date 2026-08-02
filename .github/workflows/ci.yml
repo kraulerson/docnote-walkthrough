@@ -124,6 +124,14 @@ jobs:
 
       - name: Governance - Phase gate check
         if: hashFiles('.claude/phase-state.json') != ''
+        # SOIF_PHASE_GATES=warn (documented knob, User Guide "What Is Enforced"):
+        # the Phase 1->2 protection backstop cannot verify branch protection from
+        # inside GitHub Actions (the default workflow token cannot read protection
+        # settings), so the gate FAILs in CI while passing locally
+        # (scripts/check-gate.sh --preflight verifies protection is configured).
+        # Local gates remain strict; see WALK-ISSUE-LOG.md ISSUE-006.
+        env:
+          SOIF_PHASE_GATES: "warn"
         run: |
           if [ ! -f scripts/check-phase-gate.sh ]; then
             echo "::error::Phase gate check script missing. Framework integrity compromised."
