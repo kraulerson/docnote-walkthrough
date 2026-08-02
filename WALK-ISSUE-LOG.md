@@ -512,3 +512,41 @@ Two sub-findings: (a) the detector needs specific token shapes free-text prose
 doesn't hit; (b) SOIF_FORCE_STEP can't run non-interactively, so an autonomous
 agent has no working override.
 Time lost: 18
+
+### ISSUE-018 — pre-commit suppression detector flags a DOC that only *mentions* the directive
+When: 2026-08-02 ~15:54 | Where: pre-commit BL-185 SAST-suppression audit, committing WALK-REPORT.md
+Expected: Committing a Markdown report whose prose *discusses* the `nosem`-family
+suppression directive (this walk logs ISSUE-011 about exactly that directive)
+should be a plain docs commit — the file contains no code and suppresses no scan.
+Actual: The pre-commit hook's suppression detector matched the bare token inside
+my English sentences and treated the file as if it *carried* a live suppression:
+it printed "BL-185: 1 staged line(s) carrying a semgrep suppression directive
+... in: WALK-REPORT.md — those lines were skipped BY INSTRUCTION" and wrote a
+`type: "sast_suppression"` row (`directive_count: 1`, `files: WALK-REPORT.md`,
+`final_outcome: recorded_only`) into `.claude/bypass-audit.json`. The commit
+still succeeded (recorded_only, not a block), but the audit log now shows a
+"suppression" event for a file that suppresses nothing. The detector can't tell
+a code line *using* the directive from prose *naming* it, so honestly
+documenting the framework's own behavior manufactures a false bypass record.
+Recursion note (extra evidence): this very log entry names the token too, so
+committing WALK-ISSUE-LOG.md will generate a *second* identical false audit row.
+The append-only bypass audit therefore accretes an entry every time you write
+about suppressions — the security-hygiene log gets diluted by its own
+documentation.
+Severity: Minor (nothing is blocked and nothing unsafe ships; but the
+bypass-audit ledger — a security-review surface — gains false-positive
+"suppression" rows from ordinary prose, so a reviewer auditing who-suppressed-
+what must now separate real suppressions from files that merely spell the word).
+Resolution: documented-path, no workaround needed and none taken. I did NOT
+try to dodge the detector (e.g. obfuscating the token), because the honest
+report has to name the directive it's reporting on, and the detector firing IS
+the finding. Recorded as a finding only; the framework clone is never edited.
+Suggested fix (for the framework, not applied here): scope the suppression
+detector to code/comment lines in scannable source, or exclude Markdown/docs,
+or require the token to sit on a line that also contains a real code token.
+Time lost: 3 (only the time to inspect the audit diff and log this)
+
+--- END OF WALK: all five phases crossed, final check-phase-gate.sh GATE_EXIT=0
+("Phase gates consistent"), v1.0.0 live + released. 18 numbered findings
+(0 Blocker / 5 Major / 10 Minor incl. this one / 3 Confusion) + 13 smooth
+notes. See WALK-REPORT.md for the synthesis. ---

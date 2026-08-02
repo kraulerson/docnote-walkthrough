@@ -24,7 +24,7 @@ in `BUGS.md`. This report summarizes.
 |---|---|---|
 | **Blocker** | 0 | Could not proceed via docs at all |
 | **Major** | 5 | Proceeded only by breaking persona / an undocumented recovery |
-| **Minor** | 9 | Worked but wrong/misleading |
+| **Minor** | 10 | Worked but wrong/misleading |
 | **Confusion** | 3 | Worked but unclear what to do next |
 | **Smooth notes** | 13 | Things that went genuinely well |
 
@@ -94,7 +94,11 @@ the legal-review gate demands a Privacy Policy for a zero-collection local tool
 (ISSUE-013); the Phase-4 monitoring check assumes server-side error telemetry a
 zero-telemetry static app doesn't have, and its free-text detector only accepts
 a specific keyword shape (ISSUE-017); the `SOIF_FORCE_STEP` and `--reset`
-escape hatches require an interactive terminal, so an autonomous agent has none.
+escape hatches require an interactive terminal, so an autonomous agent has none;
+and the pre-commit suppression detector flags a *document that merely mentions*
+the `nosem`-family directive as if it carried a live suppression, writing a
+false `sast_suppression` row into the bypass-audit ledger (ISSUE-018 — found by
+committing this very report, which discusses that directive).
 
 **What impressed me (the smooth column):** the whole thing is real, not theater.
 `init.sh --non-interactive` scaffolded a working repo (CI, hooks, pinned deps)
@@ -167,7 +171,7 @@ avoidable doc/ordering gaps that would disproportionately hurt a first-timer.
   per-feature security audits, 3 UAT sessions, 6 reviewer evaluations,
   Phase-3 validation summary, threat-model validation, SBOM, HANDOFF,
   INCIDENT_RESPONSE, SECURITY, PRIVACY_POLICY, USER_GUIDE, APPROVAL_LOG.
-- **The dogfood output:** `WALK-ISSUE-LOG.md` (17 findings + 13 smooth notes)
+- **The dogfood output:** `WALK-ISSUE-LOG.md` (18 findings + 13 smooth notes)
   and `BUGS.md` (33 bugs, all resolved).
 
 ## 6. Final gate status
