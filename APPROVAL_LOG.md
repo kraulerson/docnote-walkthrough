@@ -44,6 +44,15 @@ This document records phase gate reviews for this project. For personal projects
 <!-- BL-170-APPEND-DESIGN -->
 _When this gate is crossed, **append** a completed approval table directly below (above this section's closing `---`) — use the shape at the top of this file (artifacts to review: PRODUCT_MANIFESTO.md). Append-only: never edit a line once pushed._
 
+| Field | Value |
+|---|---|
+| **Gate** | Phase 0 → Phase 1 |
+| **Reviewer** | Karl (Orchestrator, self-review — personal project) |
+| **Date** | 2026-08-02 |
+| **Artifacts reviewed** | PRODUCT_MANIFESTO.md; docs/phase-0/frd.md; docs/phase-0/user-journey.md; docs/phase-0/data-contract.md |
+| **Decision** | Approved |
+| **Notes** | MVP Cutline matches the DocNote definition (6 must-have features). Open Questions Q1-Q3 resolved. Light-track skips recorded in Appendices A, C, D. No unrequested features found. |
+
 ---
 
 ## Phase Gate: Phase 1 → Phase 2
