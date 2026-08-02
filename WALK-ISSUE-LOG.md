@@ -298,3 +298,32 @@ not vouch for them (observation recorded to .claude/bypass-audit.json)." You
 cannot suppress silently — good governance. (Minor: it also matches the literal
 token "nosemgrep" in prose, e.g. this very log and the agent report, so the
 count includes non-code mentions.)
+
+---
+
+### SMOOTH — UAT sessions 2 found real, spec-relevant bugs; fix: commits work cleanly
+When: 2026-08-02 | Where: Phase 2 UAT sessions
+- The adversarial UAT agents keep earning their keep: session 2 found a
+  genuine SEV-2 where I had UNDER-IMPLEMENTED a Manifesto MVP Cutline item
+  ("remove highlight WITH note-loss confirmation") — the framework's own
+  artifacts (Manifesto + Bible §9) were the spec the agent checked me against,
+  and caught the gap. That's the phase-gated design working.
+- `fix:` commits (pure bug remediation) commit cleanly WITHOUT an active Build
+  Loop — only `feat:` requires the loop. So the ISSUE-010 trap is specific to
+  feature commits; remediation is smoother.
+
+### ISSUE-012 — process-checklist marked build_loop steps against a null feature
+When: 2026-08-02 ~19:05 | Where: scripts/process-checklist.sh
+Expected: `--start-feature NAME` starts a loop, then `--complete-step` marks steps.
+Actual: During session-2 remediation I ran `--start-feature "..."` followed by
+two `--complete-step build_loop:...`. The start-feature appears to have not
+registered a feature ("Feature: none") yet the two complete-steps SUCCEEDED,
+leaving the loop at "Feature: none / Progress: 2/6 steps" — steps recorded
+against no feature. I abandoned that path (remediation is a `fix:` commit that
+doesn't need a loop), but the stray 2/6 state persisted. `--reset build_loop`
+requires interactive terminal Y/N auth I can't provide from the agent, so I
+couldn't clean it up autonomously (it didn't end up blocking the fix commit).
+Severity: Minor (didn't block; but complete-step succeeding on a null feature,
+and reset being un-runnable non-interactively, are both rough edges)
+Resolution: documented-path (committed remediation as fix:, which the gate allows)
+Time lost: 3
