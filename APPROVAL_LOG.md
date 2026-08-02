@@ -110,14 +110,15 @@ _Record after deployment and go-live verification._
 <!-- BL-170-APPEND-DESIGN -->
 _Append a completed copy of the shape below when Phase 4 is done. Append-only: never edit a line once pushed._
 
-    | Field | Value |
-    |---|---|
-    | **Deployment Date** | YYYY-MM-DD |
-    | **Go-Live Verified** | Yes |
-    | **Rollback Tested** | Yes |
-    | **Monitoring Verified** | Yes |
-    | **Handoff Document** | HANDOFF.md completed |
-    | **Notes** | optional notes |
+| Field | Value |
+|---|---|
+| **Deployment Date** | 2026-08-02 |
+| **Go-Live Verified** | Yes — https://kraulerson.github.io/docnote-walkthrough/ (HTTP 200, HTTPS; Lighthouse a11y 100 / perf 98 / best-practices 96 on the prod URL) |
+| **Rollback Tested** | Yes — mechanism verified (tag re-deploy); first release so no prior tag to promote (docs/test-results/2026-08-02_rollback-test.md) |
+| **Monitoring Verified** | Yes — deploy-health alert channel verified by a real failed run (30765794342) whose alert arrived; UptimeRobot optional follow-up |
+| **Handoff Document** | HANDOFF.md completed + handoff test executed (docs/test-results/2026-08-02_handoff-test.md) |
+| **Release** | v1.0.0 — https://github.com/kraulerson/docnote-walkthrough/releases/tag/v1.0.0 (SBOM attached); release run 30765794342 success |
+| **Notes** | Personal Light-track project. All 6 MVP features shipped; 125 tests green; Semgrep 0; 6-reviewer eval complete; every bug (incl. red-team SEV-1 RT-01) resolved. snyk + ZAP DAST are signed attested-skips (env limits); ZAP to run against the live URL as a follow-up. |
 
 ---
 

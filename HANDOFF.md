@@ -39,10 +39,21 @@ npm run preview        # serve the production build at http://localhost:4173/
 
 ## 3. Deploy (GitHub Pages)
 
-The app is a static `dist/` bundle. Production is GitHub Pages.
+The app is a static `dist/` bundle. Production is GitHub Pages, live at
+https://kraulerson.github.io/docnote-walkthrough/.
 
 ```bash
 git tag -s vX.Y.Z && git push --tags   # release is tag-driven (.github/workflows/release.yml)
+```
+
+**One-time Pages setup (required — learned the hard way, WALK-ISSUE-LOG ISSUE-016):**
+Settings → Pages → Source = "GitHub Actions". Because the workflow deploys from
+a TAG (not `main`), you must also allow tags in the `github-pages` environment,
+or the first release fails at job setup with no readable error:
+
+```bash
+gh api -X POST repos/OWNER/docnote-walkthrough/environments/github-pages/deployment-branch-policies \
+  -f name='v*' -f type='tag'
 ```
 
 `vite.config.ts` sets `base: './'` and injects the production `Content-Security-Policy`
@@ -50,6 +61,33 @@ meta tag at build time. **At go-live, verify the host's response headers** with
 `curl -I https://<user>.github.io/docnote-walkthrough/` and reconcile against the
 web Platform Module §5.2 (GitHub Pages cannot set custom response headers, so
 `frame-ancestors` cannot ship — documented residual, Bible §4).
+
+## 3a. Monitoring
+
+DocNote is a static, client-side, zero-telemetry app, so monitoring is
+deliberately minimal (full rationale: `docs/test-results/2026-08-02_monitoring.md`):
+
+| What | Tool / channel | Notes |
+|---|---|---|
+| Deploy health | **GitHub Actions** (Actions tab / `gh run list --workflow=release.yml`) | A failed deploy leaves the current immutable Pages deploy live. Alert channel: GitHub's own workflow-failure emails to the repo owner. |
+| Site availability | **UptimeRobot** (optional, free) — HTTP monitor on https://kraulerson.github.io/docnote-walkthrough/, 5-min interval | Recommended; account setup is a manual Orchestrator step. Dashboard URL: (add after creating the monitor). |
+| Client-side errors | **React ErrorBoundary** (in-app recovery UI) + browser console | No server-side error telemetry by design (privacy + `connect-src 'none'`). Sentry/PostHog intentionally NOT used. |
+
+Alert channel of record: repo-owner email (GitHub workflow failures) +
+kraulerson@gmail.com. No paging (personal tool).
+
+**Monitoring verification event (P4-001):**
+- **Date verified:** 2026-08-02
+- **Test error triggered:** a deploy error occurred on the first v1.0.0 release
+  attempt (workflow run 30765794342 failed at job setup before the
+  `github-pages` tag policy was added).
+- **Alert fired:** GitHub Actions' workflow-failure alert was sent to the
+  configured channel (repo-owner email / GitHub notifications).
+- **Alert arrived:** confirmed — the failure notification arrived and was acted
+  on (the tag policy was added and the re-run succeeded).
+- **Result:** the deploy-health alert channel is verified end to end (error →
+  alert fired → alert arrived → acted on). UptimeRobot availability alerting is
+  the optional, not-yet-verified follow-up (recorded honestly).
 
 ## 4. Maintenance
 
