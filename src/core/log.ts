@@ -5,6 +5,8 @@
  * or excerpt text in `detail` — metadata only (sizes, counts, error names).
  */
 
+import { newId } from './id';
+
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 export interface LogEntry {
@@ -15,7 +17,7 @@ export interface LogEntry {
   detail?: Record<string, string | number | boolean>;
 }
 
-const sessionId: string = crypto.randomUUID();
+const sessionId: string = newId();
 
 /** Exposed for tests. */
 export function getSessionId(): string {

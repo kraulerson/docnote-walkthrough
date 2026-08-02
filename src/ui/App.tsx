@@ -3,11 +3,12 @@ import { anchorFromRange, anchorsIntersect } from '../core/anchors';
 import { loadAnnotations, saveAnnotations } from '../core/annotationRepository';
 import { DocNoteError, ERROR_MESSAGES } from '../core/errors';
 import { hashText } from '../core/hash';
+import { newId } from '../core/id';
 import { log } from '../core/log';
 import type { ParsedDocument } from '../core/parseDocx';
 import { parseDocx } from '../core/parseDocx';
 import type { AnnotationStore, Highlight, HighlightColor, TextAnchor } from '../core/types';
-import { MAX_DOCUMENT_BYTES } from '../core/types';
+import { MAX_DOCUMENT_BYTES, MAX_SELECTION_CHARS } from '../core/types';
 import { Banner } from './Banner';
 import { DocumentView } from './DocumentView';
 import { HighlightMenu } from './HighlightMenu';
@@ -26,6 +27,7 @@ type ToolbarState =
 
 const HINT_UNANCHORABLE = 'Select text inside the document to highlight.';
 const HINT_OVERLAP = 'Highlights cannot overlap.';
+const HINT_TOO_LONG = `Selection is too long to highlight (limit ${MAX_SELECTION_CHARS} characters).`;
 
 export function App() {
   const [view, setView] = useState<ViewState>({ kind: 'landing' });
@@ -118,40 +120,66 @@ export function App() {
     [openFile],
   );
 
-  const onDocumentMouseUp = useCallback((event: React.MouseEvent) => {
-    const container = documentContainer.current;
-    if (!container) {
-      return;
-    }
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-      setToolbar({ visible: false });
-      // Feature 3: a plain click (no selection) on an existing highlight opens
-      // its action menu; a click on empty text closes any open menu.
-      const target = event.target as Element | null;
-      const mark = target?.closest?.('mark[data-hl-id]') as HTMLElement | null;
-      setActiveHighlightId(mark?.dataset.hlId ?? null);
-      return;
-    }
-    const range = selection.getRangeAt(0);
-    if (!container.contains(range.commonAncestorContainer)) {
-      setToolbar({ visible: false });
-      return;
-    }
-    // BUG-25: a new selection opens the color toolbar — close any open
-    // highlight menu so the two popovers are never shown at once.
-    setActiveHighlightId(null);
-    const anchor = anchorFromRange(container, range);
-    if (!anchor) {
-      setToolbar({ visible: true, hint: HINT_UNANCHORABLE, anchor: null });
-      return;
-    }
-    if (highlights.some((h) => anchorsIntersect(h.anchor, anchor))) {
-      setToolbar({ visible: true, hint: HINT_OVERLAP, anchor: null });
-      return;
-    }
-    setToolbar({ visible: true, hint: null, anchor });
-  }, [highlights]);
+  // Shared selection evaluation for pointer AND keyboard (BUG-14). `clickTarget`
+  // is the element a pointer clicked (used to open a highlight's menu on a plain
+  // click); for keyboard selection it is null.
+  const evaluateSelection = useCallback(
+    (clickTarget: Element | null) => {
+      const container = documentContainer.current;
+      if (!container) {
+        return;
+      }
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+        setToolbar({ visible: false });
+        // Feature 3: a plain click (no selection) on an existing highlight opens
+        // its action menu; a click on empty text closes any open menu.
+        const mark = clickTarget?.closest?.('mark[data-hl-id]') as HTMLElement | null;
+        setActiveHighlightId(mark?.dataset.hlId ?? null);
+        return;
+      }
+      const range = selection.getRangeAt(0);
+      if (!container.contains(range.commonAncestorContainer)) {
+        setToolbar({ visible: false });
+        return;
+      }
+      // BUG-25: a new selection opens the color toolbar — close any open
+      // highlight menu so the two popovers are never shown at once.
+      setActiveHighlightId(null);
+      // BUG-9: distinguish an over-length selection from an unanchorable one so
+      // the hint names the real cause.
+      if (range.toString().length > MAX_SELECTION_CHARS) {
+        setToolbar({ visible: true, hint: HINT_TOO_LONG, anchor: null });
+        return;
+      }
+      const anchor = anchorFromRange(container, range);
+      if (!anchor) {
+        setToolbar({ visible: true, hint: HINT_UNANCHORABLE, anchor: null });
+        return;
+      }
+      if (highlights.some((h) => anchorsIntersect(h.anchor, anchor))) {
+        setToolbar({ visible: true, hint: HINT_OVERLAP, anchor: null });
+        return;
+      }
+      setToolbar({ visible: true, hint: null, anchor });
+    },
+    [highlights],
+  );
+
+  const onDocumentMouseUp = useCallback(
+    (event: React.MouseEvent) => evaluateSelection(event.target as Element | null),
+    [evaluateSelection],
+  );
+
+  // BUG-14: keyboard selection (Shift+arrows) must also surface the toolbar.
+  const onDocumentKeyUp = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key.startsWith('Arrow') || event.key === 'Home' || event.key === 'End') {
+        evaluateSelection(null);
+      }
+    },
+    [evaluateSelection],
+  );
 
   const onColorPick = useCallback(
     (color: HighlightColor) => {
@@ -160,7 +188,7 @@ export function App() {
       }
       const now = new Date().toISOString();
       const highlight: Highlight = {
-        id: crypto.randomUUID(),
+        id: newId(),
         color,
         anchor: toolbar.anchor,
         createdAt: now,
@@ -273,6 +301,19 @@ export function App() {
     documentContainer.current = element;
   }, []);
 
+  // BUG-24: Escape closes any open popover (menu, note editor, color toolbar).
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setActiveHighlightId(null);
+        setNoteEditorFor(null);
+        setToolbar({ visible: false });
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   // Feature 6: persist annotations to localStorage on every change, once a
   // document with a resolved identity is open. Failures degrade gracefully:
   // storage-unavailable warns once, quota warns each time the latest change
@@ -323,7 +364,12 @@ export function App() {
       </header>
       {error !== null && <Banner message={error} onDismiss={() => setError(null)} />}
       <main className="app-main">
-        <section className="document-area" aria-label="Document" onMouseUp={onDocumentMouseUp}>
+        <section
+          className="document-area"
+          aria-label="Document"
+          onMouseUp={onDocumentMouseUp}
+          onKeyUp={onDocumentKeyUp}
+        >
           {view.kind === 'landing' && (
             <p className="landing-hint">
               Pick a Word document to read it here. Nothing is uploaded; the file is never

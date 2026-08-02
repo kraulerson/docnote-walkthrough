@@ -17,6 +17,29 @@ export function getBlockElements(container: Element | DocumentFragment): Element
   );
 }
 
+function isLowSurrogate(code: number): boolean {
+  return code >= 0xdc00 && code <= 0xdfff;
+}
+function isHighSurrogate(code: number): boolean {
+  return code >= 0xd800 && code <= 0xdbff;
+}
+
+/** Move a start boundary back off the low half of a surrogate pair. */
+function snapStart(text: string, offset: number): number {
+  if (offset > 0 && isLowSurrogate(text.charCodeAt(offset)) && isHighSurrogate(text.charCodeAt(offset - 1))) {
+    return offset - 1;
+  }
+  return offset;
+}
+
+/** Move an end boundary forward to include the low half of a surrogate pair. */
+function snapEnd(text: string, offset: number): number {
+  if (offset > 0 && offset < text.length && isHighSurrogate(text.charCodeAt(offset - 1)) && isLowSurrogate(text.charCodeAt(offset))) {
+    return offset + 1;
+  }
+  return offset;
+}
+
 /** Code-unit offset of a (node, offset) boundary within its block. */
 function offsetAtBoundary(block: Element, node: Node, offset: number): number | null {
   if (!block.contains(node)) {
@@ -61,20 +84,21 @@ export function anchorFromRange(
   if (!startBlock || startBlock !== endBlock) {
     return null;
   }
-  const startOffset = offsetAtBoundary(
+  const rawStart = offsetAtBoundary(
     startBlock,
     effectiveRange.startContainer,
     effectiveRange.startOffset,
   );
-  const endOffset = offsetAtBoundary(
-    startBlock,
-    effectiveRange.endContainer,
-    effectiveRange.endOffset,
-  );
-  if (startOffset === null || endOffset === null || endOffset <= startOffset) {
+  const rawEnd = offsetAtBoundary(startBlock, effectiveRange.endContainer, effectiveRange.endOffset);
+  if (rawStart === null || rawEnd === null || rawEnd <= rawStart) {
     return null;
   }
-  const exactText = (startBlock.textContent ?? '').slice(startOffset, endOffset);
+  // BUG-10: never split a UTF-16 surrogate pair (emoji, flags). Snap the
+  // boundaries outward so a highlight covers whole code points.
+  const blockText = startBlock.textContent ?? '';
+  const startOffset = snapStart(blockText, rawStart);
+  const endOffset = snapEnd(blockText, rawEnd);
+  const exactText = blockText.slice(startOffset, endOffset);
   if (exactText.trim().length === 0 || exactText.length > MAX_SELECTION_CHARS) {
     return null;
   }
