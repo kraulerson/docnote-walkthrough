@@ -273,5 +273,18 @@
     },
     "user_response": "n/a",
     "final_outcome": "recorded_only"
+  },
+  {
+    "timestamp": "2026-08-02T20:24:50Z",
+    "session_id": null,
+    "type": "sast_suppression",
+    "actor": "user_terminal",
+    "enforcement_level_at_event": "strict",
+    "details": {
+      "directive_count": 10,
+      "files": "WALK-ISSUE-LOG.md"
+    },
+    "user_response": "n/a",
+    "final_outcome": "recorded_only"
   }
 ]
