@@ -66,18 +66,18 @@ You can fill this out using the **intake wizard** (`bash scripts/intake-wizard.s
 | Field | Value |
 |---|---|
 | **Project name** | docnote-walkthrough |
-| **Project codename** (if different from public name) | |
+| **Project codename** (if different from public name) | DocNote |
 | **One-sentence description** | A web app that views Word documents read-only with text highlighting and notes attached to highlights |
 | **Project track** | Light |
 | **Platform type** | web |
 | **Platform Module** | SOI-PM-WEB |
 
 > **Mobile (SOI-PM-MOBILE v1.0)** — The mobile Platform Module covers React Native (Expo), Flutter, Swift (iOS), and Kotlin (Android) with architecture patterns, offline-first guidance, code signing, app store submission, and testing.
-| **Target platforms** | _e.g., "Windows 10+, macOS 12+, Ubuntu 22.04+" or "Web (all modern browsers)" or "iOS 16+, Android 13+"_ |
+| **Target platforms** | Web (last 2 versions of Chrome, Firefox, Safari, Edge; desktop browsers) |
 | **Is this a personal project or organizational deployment?** | Personal |
-| **Repository URL** (if already created) | |
-| **Git host** | _github / gitlab / bitbucket / other_ |
-| **Repository visibility** | _private / public_ (org mode forces private) |
+| **Repository URL** (if already created) | https://github.com/kraulerson/docnote-walkthrough |
+| **Git host** | github |
+| **Repository visibility** | public |
 
 ---
 
@@ -88,17 +88,23 @@ You can fill this out using the **intake wizard** (`bash scripts/intake-wizard.s
 _What specific problem does this solve? Be concrete — not "improve efficiency" but "the finance team spends 6 hours/week manually reconciling invoices from 3 systems into a single spreadsheet."_
 
 ```
-[Write the problem statement here]
+People reviewing Word (.docx) documents — drafts, class readings, contracts —
+want to highlight passages and attach short notes WITHOUT modifying the file
+and without needing Microsoft Word installed. Today they either open the file
+in an editor and risk accidental changes, or keep notes in a separate file and
+lose the connection between each note and the passage it refers to. There is
+no lightweight, local, read-only way to mark up a .docx and have the markup
+still be there the next time the same document is opened.
 ```
 
 ### 2.2 Who Has This Problem
 
 | Field | Value |
 |---|---|
-| **Primary user persona** | _Job title, technical skill level, what they're trying to accomplish_ |
-| **Secondary personas** (if any) | |
-| **How do they solve this problem today?** | _Spreadsheet, manual process, different tool, they don't_ |
-| **What's wrong with the current solution?** | |
+| **Primary user persona** | Student / knowledge worker reviewing .docx documents. Basic computer skills (can use a browser and a file picker). Goal: read a document, mark important passages, and attach short thoughts to them, without changing the file. |
+| **Secondary personas** (if any) | N/A |
+| **How do they solve this problem today?** | Open the file in Word/LibreOffice and use highlight + comments (which edits the file and requires the software), or keep notes in a separate text file. |
+| **What's wrong with the current solution?** | Editing tools risk accidental modification of the document; they require installed office software; separate note files lose the link between a note and its exact passage. |
 
 ### 2.3 Success Criteria
 
@@ -106,20 +112,20 @@ _How will you know this project succeeded? Define measurable outcomes, not feeli
 
 | Metric | Target | How Measured |
 |---|---|---|
-| _Example: Time spent on weekly reconciliation_ | _Reduced from 6 hours to <1 hour_ | _User self-report after 4 weeks_ |
-| | | |
-| | | |
-| | | |
+| Time to open and read a typical .docx (≤2 MB) | Text visible in <3 seconds | Automated test with fixture document + manual timing |
+| Annotation persistence | Highlights and notes reappear after full browser restart for the same document, 100% of tested cases | Automated persistence tests + manual UAT |
+| Note-to-passage navigation | Clicking a note scrolls to and indicates its highlight in 1 click, 100% of tested cases | Automated tests + manual UAT |
+| Document integrity | The original .docx file is never modified by the app (app has no write path to the file) | Code review + test that file bytes are untouched |
 
 ### 2.4 What This Is NOT
 
 _List 3-5 things that sound related but are explicitly out of scope. This prevents the agent from scope-creeping into adjacent problems._
 
-1. 
-2. 
-3. 
-4. 
-5. 
+1. Not a document editor — the document text is never modified.
+2. Not a cloud or collaboration tool — no accounts, no server, no sharing.
+3. Not a general document viewer — .docx only (no PDF, .doc, .odt, etc.).
+4. Not a document manager/library — one document open at a time via file picker.
+5. Not an export/reporting tool — annotations live in the app only (MVP).
 
 ---
 
@@ -129,29 +135,29 @@ _List 3-5 things that sound related but are explicitly out of scope. This preven
 
 | Field | Value |
 |---|---|
-| **Target MVP date** | |
-| **Hard deadline?** | Yes / No — _If yes, what happens if missed?_ |
-| **Orchestrator availability** | _Hours/week dedicated to this project. Be honest — "as time allows" means "unpredictable."_ |
-| **Blocked time or interleaved?** | _Dedicated half/full days, or squeezed between other work?_ |
+| **Target MVP date** | 2026-08-16 (2 weeks from start) |
+| **Hard deadline?** | No — personal project; if missed, keep going. |
+| **Orchestrator availability** | Concentrated sessions, roughly 10-15 hours/week while the project is active. |
+| **Blocked time or interleaved?** | Blocked — dedicated working sessions. |
 
 ### 3.2 Budget
 
 | Field | Value |
 |---|---|
-| **Monthly infrastructure ceiling** | _Maximum acceptable hosting/tooling cost per month_ |
-| **One-time budget** (if any) | _For domain, trademark, paid tools, pen testing, etc._ |
-| **AI subscription** | _Already have / Need to provision. Consumer or commercial?_ |
-| **Who approves spending?** | _Name and role, or "self" for personal projects_ |
+| **Monthly infrastructure ceiling** | $0/month — free tiers only (static hosting at most). |
+| **One-time budget** (if any) | $0 — no domain, no paid tools. |
+| **AI subscription** | Already have — Claude Max (consumer tier). |
+| **Who approves spending?** | Self |
 
 ### 3.3 Users
 
 | Field | Value |
 |---|---|
-| **Users at launch** | _Number and who they are_ |
-| **Users at 6 months** | |
-| **Users at 12 months** | |
-| **Internal only or external?** | Internal / External / Both |
-| **Geographic distribution** | _Single office, national, international? This drives data sovereignty._ |
+| **Users at launch** | 1 (the developer) |
+| **Users at 6 months** | <10 (friends/classmates at most) |
+| **Users at 12 months** | <10 |
+| **Internal only or external?** | Internal (personal use) |
+| **Geographic distribution** | Single user, local machine. No data sovereignty concerns — data never leaves the browser. |
 
 ---
 
@@ -163,32 +169,32 @@ _For each feature, define the business logic trigger and the failure state. If y
 
 | # | Feature | Business Logic Trigger | Failure State |
 |---|---|---|---|
-| 1 | | If [condition], the system must [action] and output [result] | What happens when input is invalid, service is unavailable, or user abandons? |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
-| 5 | | | |
-| 6 | | | |
-| 7 | | | |
-| 8 | | | |
+| 1 | Open & render .docx read-only | If the user picks a .docx file via the file picker, the system must parse it client-side and output the document text as a read-only rendered view. | If the file is not a valid .docx (wrong type, corrupt, or empty), show a specific error ("This file could not be opened as a .docx") and return to the picker state. If the file exceeds 10 MB, reject with a size-limit message. The app never crashes on bad input. |
+| 2 | Apply highlight (≥3 colors) | If the user selects text in the rendered document and picks one of at least 3 highlight colors, the system must record the highlight and output the selected range visibly highlighted in that color. | If the selection is empty or collapses to nothing, the highlight action is unavailable (no-op with disabled controls). If the selection cannot be anchored to document text (e.g., selection spans UI chrome), show "Select text inside the document to highlight" and apply nothing. |
+| 3 | Remove highlight | If the user activates an existing highlight and chooses Remove, the system must delete that highlight (and its attached note, after confirmation if a note exists) and output the text restored to normal appearance. | If the highlight no longer exists in storage (stale state), refresh the annotation layer and show "That highlight was already removed." Removal is idempotent — no crash on double-remove. |
+| 4 | Attach / edit / delete a note on a highlight | If the user activates a highlight and enters note text (1-1000 chars), the system must save the note attached to that highlight and output it in the side panel. Editing replaces the text; deleting removes the note but keeps the highlight. | If note text is empty on save, keep the editor open with "Note cannot be empty" (user may cancel instead). If text exceeds 1000 chars, block save with a character-count message. If the target highlight was removed meanwhile, show "The highlight for this note no longer exists" and discard gracefully. |
+| 5 | Notes side panel with click-to-jump | If a document has notes, the system must list them in a side panel (in document order); if the user clicks a note, the system must scroll the document to its highlight and output a brief visual indication (not color-only) of the target highlight. | If the note's highlight cannot be located in the rendered document (anchor lost), keep the note listed, mark it visibly as "unlocated," and do not scroll. Empty state: panel shows "No notes yet." |
+| 6 | Local persistence per document | If the user re-opens the same document (same content) in the same browser, the system must restore all highlights and notes from localStorage and output them exactly as they were. | If localStorage is unavailable (private mode/blocked), the app works for the session and shows a one-time warning "Annotations will not be saved." If stored data is corrupt or its version is unknown, discard it safely with a message "Saved annotations could not be loaded" — never crash. If storage quota is exceeded on save, warn the user that the latest change was not saved. |
 
 ### 4.2 Should-Have Features (Post-MVP v1.1)
 
 _Features that enhance the MVP but are not required for first usable release._
 
-1. 
-2. 
-3. 
-4. 
-5. 
+1. Export annotations (notes + highlighted passages) to a text/Markdown file
+2. Search within the document text
+3. Filter/sort the notes panel (by color, by position)
+4. Keyboard shortcuts for highlight colors
+5. N/A
 
 ### 4.3 Will-Not-Have Features (Explicit Exclusions)
 
 _Things that sound related but the agent must NOT build or suggest._
 
-1. 
-2. 
-3. 
+1. Editing document text (any write operation on the document)
+2. Accounts, login, server-side anything, or cloud sync
+3. Support for formats other than .docx (no PDF, .doc, .odt, .rtf)
+4. Real-time collaboration or sharing of annotations
+5. Mobile apps / native apps — desktop web browser only
 
 ---
 
@@ -200,11 +206,9 @@ _What data does the user provide or the system ingest?_
 
 | Input | Data Type | Validation Rules | Sensitivity | Required? |
 |---|---|---|---|---|
-| _Example: Employee name_ | _Text_ | _2-100 chars, no special chars except hyphen/apostrophe_ | _PII_ | _Yes_ |
-| | | | | |
-| | | | | |
-| | | | | |
-| | | | | |
+| .docx document file | Binary file (ZIP + WordprocessingML) | Must be a readable .docx; ≤10 MB; parsed entirely client-side; never uploaded anywhere | Internal (user's private documents; never leave the browser) | Yes |
+| Highlight (range + color) | App data (JSON) | Range must anchor to existing document text; color must be one of the defined palette | Internal | Yes (core function) |
+| Note text | Text | 1-1000 characters; plain text only (no HTML rendering of note content) | Internal | No (optional per highlight) |
 
 **Sensitivity classifications:** Public, Internal, Confidential, PII, Financial, Health/Medical, Regulated
 
@@ -214,9 +218,9 @@ The **highest** classification across all rows in §5.1 is the project-level `da
 
 | Field | Value (one of) |
 |---|---|
-| **Project-level data_classification** | `public` / `internal` / `confidential` / `pii` / `financial` / `health` / `regulated` |
-| **ZDR attested (Zero Data Retention or self-hosted LLM)** | `true` / `false` |
-| **ZDR attestation reason** _(required when `zdr_attested=false` AND classification > public)_ | _Free text: written exception (e.g. "Customer SOW requires retention, risk accepted by CISO Email TKT-42")_ |
+| **Project-level data_classification** | `internal` |
+| **ZDR attested (Zero Data Retention or self-hosted LLM)** | `false` |
+| **ZDR attestation reason** _(required when `zdr_attested=false` AND classification > public)_ | Personal project on a consumer AI subscription (no ZDR available). End-user documents are processed entirely client-side in the user's browser and are NEVER transmitted to any server or to the AI provider. Development and testing use synthetic fixture documents only, so no Internal-classified data is ever sent to the LLM. Risk accepted by the Orchestrator (self). |
 
 These three fields are captured by `scripts/intake-wizard.sh` Section 5.5, and can be corrected after-the-fact with `scripts/reconfigure-project.sh --field data_classification --new <value>` / `--field zdr_attested --new true|false`.
 
@@ -226,9 +230,9 @@ _What does the user receive from the system?_
 
 | Output | Format | Latency Expectation |
 |---|---|---|
-| _Example: Reconciliation report_ | _PDF download_ | _<10 seconds_ |
-| | | |
-| | | |
+| Rendered read-only document view | HTML in the browser | <3 seconds for a ≤2 MB document |
+| Notes side panel | HTML list, document order | Instant (<100 ms updates) |
+| Persisted annotations | JSON in browser localStorage | Saved within 1 second of a change |
 
 ### 5.3 Third-Party Integrations
 
@@ -236,19 +240,17 @@ _Every external API or data source the application needs to connect to._
 
 | Service | What Data We Send/Receive | Auth Method | Fallback if Unavailable | Existing Account? |
 |---|---|---|---|---|
-| | | | | |
-| | | | | |
-| | | | | |
+| None — the app makes no network calls at runtime | N/A | N/A | N/A | N/A |
 
 ### 5.4 Data Persistence
 
 | Question | Answer |
 |---|---|
-| **What data must persist across sessions?** | |
-| **What data can be ephemeral (browser/device only)?** | |
-| **Expected data volume at 12 months** | _Rows, storage size, or "small/medium/large"_ |
-| **Data retention requirements** | _Keep forever, X months, regulatory requirement?_ |
-| **Backup requirements** | _Daily, real-time, or "whatever the platform default is"_ |
+| **What data must persist across sessions?** | Highlights and notes, keyed to the document they belong to (so re-opening the same document restores them). |
+| **What data can be ephemeral (browser/device only)?** | The document content itself — it is re-read from the user's file each session and never stored by the app. UI state (current scroll position, selected color) is ephemeral. |
+| **Expected data volume at 12 months** | Small — well under the ~5 MB localStorage budget (text annotations only). |
+| **Data retention requirements** | Keep until the user clears them (in-app removal or clearing browser storage). No regulatory requirements. |
+| **Backup requirements** | None — browser localStorage only, accepted risk for a personal tool. |
 
 ---
 
@@ -258,13 +260,13 @@ _Every external API or data source the application needs to connect to._
 
 | Field | Value |
 |---|---|
-| **Languages you know well** | _e.g., JavaScript/TypeScript, Python, Go_ |
-| **Frameworks you've used** | _e.g., React, Next.js, Express, Django_ |
-| **Languages/frameworks you're willing to learn** | |
-| **Languages/frameworks you refuse to use** | |
-| **Database experience** | _PostgreSQL, MySQL, SQLite, MongoDB, Supabase, etc._ |
-| **DevOps experience level** | _None / Basic (can deploy to PaaS) / Intermediate / Advanced_ |
-| **Mobile development experience** | _None / Some / Experienced. Native or cross-platform?_ |
+| **Languages you know well** | JavaScript/TypeScript (working knowledge, <1 year professional experience) |
+| **Frameworks you've used** | React (small projects/tutorials), Express (tutorial level) |
+| **Languages/frameworks you're willing to learn** | Anything TypeScript-adjacent; testing tools (Vitest/Jest, Playwright) |
+| **Languages/frameworks you refuse to use** | None |
+| **Database experience** | Minimal — some SQLite tutorials. (This project needs no database.) |
+| **DevOps experience level** | Basic — can follow docs to deploy to a PaaS/static host; no CI experience before this project |
+| **Mobile development experience** | None |
 
 ### 6.2 Competency Matrix
 
@@ -272,15 +274,15 @@ _For each domain, answer honestly: "Can I look at the AI's output and reliably d
 
 | Domain | Self-Assessment | Automated Tooling Required? |
 |---|---|---|
-| Product/UX Logic | Yes / Partially / No | |
-| Frontend Code (HTML/CSS/JS) | Yes / Partially / No | |
-| Backend / API Design | Yes / Partially / No | |
-| Database Design & Queries | Yes / Partially / No | |
-| Security (Auth, Injection, IDOR) | Yes / Partially / No | |
-| DevOps / Infrastructure | Yes / Partially / No | |
-| Accessibility (WCAG) | Yes / Partially / No | |
-| Performance Optimization | Yes / Partially / No | |
-| Mobile (iOS/Android) | Yes / Partially / No | |
+| Product/UX Logic | Partially | Yes |
+| Frontend Code (HTML/CSS/JS) | Partially | Yes |
+| Backend / API Design | N/A (no backend in this project) | N/A |
+| Database Design & Queries | N/A (no database in this project) | N/A |
+| Security (Auth, Injection, IDOR) | No | Yes |
+| DevOps / Infrastructure | No | Yes |
+| Accessibility (WCAG) | No | Yes |
+| Performance Optimization | Partially | Yes |
+| Mobile (iOS/Android) | N/A (web only) | N/A |
 
 _Every "Partially" or "No" means automated tooling is mandatory in Phase 3. The agent will factor this into architecture selection and testing strategy._
 
@@ -288,14 +290,14 @@ _Every "Partially" or "No" means automated tooling is mandatory in Phase 3. The 
 
 | Field | Value |
 |---|---|
-| **Primary development machine** | _OS, specs if relevant_ |
-| **Secondary machines** (if any) | |
-| **IDE/Editor** | _VS Code, Cursor, other_ |
-| **Docker available?** | Yes / No |
-| **Node.js version** | |
-| **Python version** (if applicable) | |
-| **Claude Code installed?** | Yes / No / Need to install |
-| **AI subscription tier** | _Claude Max, Claude Enterprise, API, other_ |
+| **Primary development machine** | macOS (Darwin 25.4.0, Apple Silicon) |
+| **Secondary machines** (if any) | None |
+| **IDE/Editor** | VS Code |
+| **Docker available?** | Yes (Colima) |
+| **Node.js version** | 25.9.0 |
+| **Python version** (if applicable) | N/A |
+| **Claude Code installed?** | Yes |
+| **AI subscription tier** | Claude Max (consumer) |
 
 ### 6.4 Architecture Preferences & Constraints
 
@@ -305,44 +307,44 @@ _These are preferences, not mandates. The agent will respect hard constraints bu
 
 | Field | Value | Hard Constraint or Preference? |
 |---|---|---|
-| **Primary language** | _e.g., TypeScript, Rust, Python, Dart, C#, or "no preference"_ | |
-| **Data storage** | _e.g., SQLite, PostgreSQL, Supabase, file system, or "no preference"_ | |
-| **Authentication** | _e.g., Supabase Auth, enterprise SSO, local-only, none, or "no preference"_ | |
+| **Primary language** | TypeScript | Hard constraint |
+| **Data storage** | Browser localStorage only (no server, no database) | Hard constraint |
+| **Authentication** | None — no accounts of any kind | Hard constraint |
 
 **Web Applications:**
 
 | Field | Value | Hard Constraint or Preference? |
 |---|---|---|
-| **Frontend framework** | _e.g., Next.js, React + Vite, SvelteKit, or "no preference"_ | |
-| **Backend framework** | _e.g., Express, FastAPI, or "no preference"_ | |
-| **Hosting** | _e.g., Vercel, Railway, self-hosted, or "no preference"_ | |
+| **Frontend framework** | No preference — recommend something simple and well-documented (I know a little React) | Preference |
+| **Backend framework** | None — the app must run fully client-side with no server component | Hard constraint |
+| **Hosting** | GitHub Pages (free static hosting) or plain local usage | Preference |
 
 **Desktop Applications:**
 
 | Field | Value | Hard Constraint or Preference? |
 |---|---|---|
-| **UI framework** | _e.g., Tauri, Electron, Flutter Desktop, or "no preference"_ | |
-| **Packaging format** | _e.g., installer, portable executable, or "no preference"_ | |
-| **Auto-update strategy** | _e.g., built-in updater, manual download, or "no preference"_ | |
-| **Offline requirement** | _Fully offline / Offline with optional sync / Requires network_ | |
+| **UI framework** | N/A | |
+| **Packaging format** | N/A | |
+| **Auto-update strategy** | N/A | |
+| **Offline requirement** | N/A | |
 
 **Mobile Applications:**
 
 | Field | Value | Hard Constraint or Preference? |
 |---|---|---|
-| **Framework** | _e.g., React Native, Flutter, Expo, native, or "no preference"_ | |
-| **Minimum OS version** | _e.g., iOS 16+, Android 13+_ | |
-| **App store distribution** | _Yes / No / Eventually_ | |
-| **Offline requirement** | _Offline tolerant (graceful errors) / Offline capable (cached reads, queued writes) / Offline first (full functionality offline)_ | |
-| **Device API requirements** | _e.g., Camera, GPS/Location, Bluetooth, NFC, Biometrics, Barcode scanner, Push notifications, Background sync_ | |
-| **Biometric authentication** | _Yes (session unlock) / Yes (primary auth) / No / "no preference"_ | |
+| **Framework** | N/A | |
+| **Minimum OS version** | N/A | |
+| **App store distribution** | N/A | |
+| **Offline requirement** | N/A | |
+| **Device API requirements** | N/A | |
+| **Biometric authentication** | N/A | |
 
 **Cross-Cutting:**
 
 | Field | Value | Hard Constraint or Preference? |
 |---|---|---|
-| **Monorepo or separate repos?** | | |
-| **Web + Desktop, Web + Mobile, or single platform?** | | |
+| **Monorepo or separate repos?** | Single repo (this one) | Preference |
+| **Web + Desktop, Web + Mobile, or single platform?** | Single platform: web | Hard constraint |
 
 ### 6.5 Existing Infrastructure to Integrate With
 
@@ -350,14 +352,14 @@ _Anything the application must connect to or comply with._
 
 | System | Details | Integration Required? |
 |---|---|---|
-| **SSO / Identity Provider** | _e.g., Okta, Azure AD, Google Workspace_ | Yes / No / N/A |
-| **Logging / SIEM** | _e.g., Datadog, Splunk, ELK_ | Yes / No / N/A |
-| **Monitoring** | _e.g., Datadog, New Relic, Grafana_ | Yes / No / N/A |
-| **Data Warehouse** | _e.g., Snowflake, Databricks, BigQuery_ | Yes / No / N/A |
-| **Backup Infrastructure** | _e.g., enterprise backup policy_ | Yes / No / N/A |
-| **CI/CD Platform** | _GitHub Actions, GitLab CI, Azure DevOps_ | Yes / No / N/A |
-| **Repository Platform** | _GitHub, GitLab, Azure DevOps_ | Yes / No / N/A |
-| **Other** | | |
+| **SSO / Identity Provider** | N/A | N/A |
+| **Logging / SIEM** | N/A | N/A |
+| **Monitoring** | N/A | N/A |
+| **Data Warehouse** | N/A | N/A |
+| **Backup Infrastructure** | N/A | N/A |
+| **CI/CD Platform** | GitHub Actions (generated by init) | Yes |
+| **Repository Platform** | GitHub | Yes |
+| **Other** | N/A | |
 
 ---
 
@@ -365,14 +367,14 @@ _Anything the application must connect to or comply with._
 
 | Field | Value |
 |---|---|
-| **Pricing model** | _Freemium / Subscription / Usage-based / One-time / N/A_ |
-| **Target price point** | |
-| **Competitive price range** | |
-| **Per-user cost estimate** (hosting, API calls, storage) | |
-| **Break-even user count** | |
-| **Hosting cost ceiling at launch** | |
-| **Hosting cost ceiling at 1,000 users** | |
-| **Hosting cost ceiling at 10,000 users** | |
+| **Pricing model** | N/A — Light track personal tool, no revenue |
+| **Target price point** | N/A |
+| **Competitive price range** | N/A |
+| **Per-user cost estimate** (hosting, API calls, storage) | N/A |
+| **Break-even user count** | N/A |
+| **Hosting cost ceiling at launch** | N/A |
+| **Hosting cost ceiling at 1,000 users** | N/A |
+| **Hosting cost ceiling at 10,000 users** | N/A |
 
 ---
 
@@ -380,61 +382,33 @@ _Anything the application must connect to or comply with._
 
 _Skip this section for personal projects. For organizational deployments, every field must be completed or marked "In Progress" with an expected completion date. Phase 0 cannot begin until all "Blocking" items are resolved._
 
-**Governance Mode:** Production / Sponsored POC / Private POC
+**Governance Mode:** N/A — Personal project (Section 8 skipped per instructions above)
 
 > **If POC mode:** This project operates under POC constraints — no production deployment, no real user data, no external users. Deferred pre-conditions must be resolved before production. Upgrade with: `scripts/upgrade-project.sh --to-production`
 
 ### 8.1 Pre-Conditions
 
-| Pre-Condition | Status | Details | Blocking? |
-|---|---|---|---|
-| **AI deployment path approved by IT Security** | Not Started / In Progress / Complete | _Commercial API, Enterprise agreement, ZDR, self-hosted?_ | Yes |
-| **Insurance confirmation obtained** | Not Started / In Progress / Complete | _Cyber liability, E&O, D&O cover AI-generated code?_ | Yes |
-| **Liability entity designated** | Not Started / In Progress / Complete | _Which entity bears liability — subsidiary or parent?_ | Yes |
-| **Project sponsor assigned** | Not Started / In Progress / Complete | _Name:_ | Yes |
-| **Backup maintainer designated** | Not Started / In Progress / Complete | _Name:_ | Yes |
-| **ITSM ticket filed / portfolio registered** | Not Started / In Progress / Complete | _Ticket #:_ | Yes |
-| **Exit criteria defined** | Not Started / In Progress / Complete | _See Section 8.5 below_ | Required (not blocking — pilot prep, see Governance Framework §XIV) |
-| **Orchestrator time allocation approved** | Not Started / In Progress / Complete | _Hours/week, blocked or interleaved_ | Required (not blocking — pilot prep, see Governance Framework §XIV) |
+N/A — personal project.
 
 ### 8.2 Approval Authorities
 
-| Gate | Approver Name | Approver Role |
-|---|---|---|
-| **Phase 0 → Phase 1** (business justification) | | |
-| **Phase 1 → Phase 2** (architecture approval) | | |
-| **Phase 3 → Phase 4** (go-live approval) | | |
+N/A — personal project (self-approval at all gates, recorded in APPROVAL_LOG.md).
 
 ### 8.3 Escalation Chain
 
-| Level | Name | Role | Contact |
-|---|---|---|---|
-| 1 (first escalation) | | | |
-| 2 | | | |
-| 3 (final authority) | | | |
+N/A — personal project.
 
 ### 8.4 Compliance Screening
 
-_Complete this screening with the project sponsor. Mark each question Yes/No and complete the action if Yes._
-
-| Question | Yes/No | Required Action | Status |
-|---|---|---|---|
-| Does this application process data used in financial reporting? | | Route through SOX IT general controls | |
-| Does this application handle payment card data (even masked)? | | PCI scoping assessment required | |
-| Does this application collect personal data from users in multiple states or internationally? | | Legal review for applicable privacy laws | |
-| Are any users or subsidiaries in the EU? | | EU AI Act classification + data sovereignty assessment | |
-| Does any subsidiary operate in a sanctioned jurisdiction? | | OFAC screening | |
-| Is data subject to records retention requirements? | | Define retention periods and deletion procedures | |
-| Will the deployed application include AI-powered features for end users? | | EU AI Act classification for deployed product | |
-| Does your organization require penetration testing for all production applications? | | Schedule pen test for Phase 3 | |
+N/A — personal project.
 
 ### 8.5 Exit Criteria
 
 | Outcome | Definition | Decision Maker |
 |---|---|---|
-| **Success** (proceed to scale) | _e.g., "MVP deployed, handoff test passed, actual hours within 20% of estimate"_ | |
-| **Conditional** (proceed with modifications) | _e.g., "MVP works but took 2x projected hours — evaluate methodology adjustments"_ | |
-| **Failure** (stop) | _e.g., "Quality unacceptable, security findings unresolvable, or Orchestrator unable to evaluate AI output"_ | |
+| **Success** (proceed to v1.1 ideas) | MVP released: all 6 must-have features working, tests green, all framework gates passed | Self |
+| **Conditional** (proceed with modifications) | MVP works but some framework gates needed documented workarounds | Self |
+| **Failure** (stop) | Core rendering or persistence proves infeasible client-side within scope | Self |
 
 ---
 
@@ -442,13 +416,13 @@ _Complete this screening with the project sponsor. Mark each question Yes/No and
 
 | Field | Value |
 |---|---|
-| **Accessibility requirements** | _WCAG AA, Section 508, organizational standard, or "Lighthouse ≥90"_ |
-| **Color vision deficiency considerations** | _Yes / No — If yes: never rely on color alone for meaning. Use shape, position, text labels, patterns, or icons._ |
-| **Supported browsers** | _e.g., "last 2 versions of Chrome, Firefox, Safari, Edge" or "Chrome only (internal tool)"_ |
-| **Mobile responsive required?** | Yes / No |
-| **Supported devices** | _Desktop only, desktop + tablet, desktop + tablet + phone_ |
-| **Branding / style guide** | _URL or description, or "none — agent's discretion"_ |
-| **Dark mode required?** | Yes / No / Nice-to-have |
+| **Accessibility requirements** | WCAG AA (per User Guide: minimum for any user-facing application) |
+| **Color vision deficiency considerations** | Yes — highlight colors are user-chosen labels, but the UI must never rely on color alone for meaning: active-highlight indication, note markers, and controls need shape/text/icon cues too. |
+| **Supported browsers** | Last 2 versions of Chrome, Firefox, Safari, Edge |
+| **Mobile responsive required?** | No (desktop browsers only) |
+| **Supported devices** | Desktop only |
+| **Branding / style guide** | None — agent's discretion, keep it simple and readable |
+| **Dark mode required?** | No |
 
 ---
 
@@ -458,36 +432,36 @@ _Complete this screening with the project sponsor. Mark each question Yes/No and
 
 | Field | Value |
 |---|---|
-| **Notification preferences for alerts** | _Email, SMS, Slack, PagerDuty, other_ |
-| **Uptime expectation** | _"Best effort" / 99.9% / 99.99%+ (if 99.99%+, this project is not a Solo Orchestrator candidate)_ |
-| **Environment strategy** | _Production only, or dev + staging + production?_ |
+| **Notification preferences for alerts** | N/A — no runtime infrastructure to alert on (client-side app) |
+| **Uptime expectation** | Best effort |
+| **Environment strategy** | Production only (static site; local dev server during development) |
 
 **Web Applications:**
 
 | Field | Value |
 |---|---|
-| **Domain name** (if already acquired) | |
-| **SSL certificate** | _Platform-provided auto-SSL or organizational cert?_ |
-| **Maintenance window preferences** | _Any restrictions on deployment timing?_ |
+| **Domain name** (if already acquired) | None — default github.io URL is fine |
+| **SSL certificate** | Platform-provided auto-SSL (GitHub Pages) |
+| **Maintenance window preferences** | None |
 
 **Desktop Applications:**
 
 | Field | Value |
 |---|---|
-| **Distribution channels** | _GitHub Releases, direct download, Homebrew, winget, Snap/Flatpak, app stores, other_ |
-| **Code signing** | _Required now / Deferred to post-MVP / Not needed_ |
-| **Code signing certificates** (if required) | _Already have / Need to acquire. Apple Developer ($99/yr), Windows EV cert ($200-500/yr)_ |
-| **Auto-update mechanism** | _Framework built-in / Manual download / Package manager / Deferred_ |
-| **Minimum supported OS versions** | _e.g., Windows 10+, macOS 12+, Ubuntu 22.04+_ |
-| **Installer format preferences** | _e.g., MSI, NSIS exe, DMG, AppImage, or "whatever the framework defaults to"_ |
+| **Distribution channels** | N/A |
+| **Code signing** | N/A |
+| **Code signing certificates** (if required) | N/A |
+| **Auto-update mechanism** | N/A |
+| **Minimum supported OS versions** | N/A |
+| **Installer format preferences** | N/A |
 
 **Mobile Applications:**
 
 | Field | Value |
 |---|---|
-| **Distribution** | _App Store / Google Play / Both / Enterprise sideload_ |
-| **Developer accounts** | _Already have / Need to create. Apple ($99/yr), Google ($25 one-time)_ |
-| **Beta testing** | _TestFlight (iOS), Play internal track (Android), both_ |
+| **Distribution** | N/A |
+| **Developer accounts** | N/A |
+| **Beta testing** | N/A |
 
 ---
 
@@ -496,7 +470,20 @@ _Complete this screening with the project sponsor. Mark each question Yes/No and
 _Anything the agent should know that doesn't fit elsewhere. Technical debt you're aware of going in, political sensitivities, dependencies on other projects, timing constraints, previous failed attempts at solving this problem, etc._
 
 ```
-[Write any additional context here]
+1. The Orchestrator is a junior developer (<1 year professional experience).
+   Reviews at decision gates will be honest but shallow in security,
+   accessibility, and DevOps — the Competency Matrix reflects this; prefer
+   conservative, well-documented choices everywhere.
+2. Rendering .docx in a browser is the riskiest technical area. Scope is
+   TEXT rendering — perfect visual fidelity (images, tables, complex layout)
+   is not required for MVP; readable text with paragraph structure is.
+3. Anchoring highlights to text ranges so they survive re-rendering and
+   re-opening is known to be tricky; the architecture phase should treat
+   anchor stability as a first-class design problem.
+4. Browser localStorage is capped (~5 MB) and can be disabled; the app must
+   degrade gracefully (documented in Feature 6 failure state).
+5. This project is also a framework walkthrough — WALK-*.md files in the repo
+   log the framework experience and are committed as documentation.
 ```
 
 ---
@@ -505,11 +492,11 @@ _Anything the agent should know that doesn't fit elsewhere. Technical debt you'r
 
 | Field | Value |
 |---|---|
-| **Testing interval** | _Every N features (default: 2). How many features to build before pausing for a UAT testing session._ |
-| **Bug tracking tool** | GitHub Issues / Linear / Jira / BUGS.md / Other: ______ |
-| **Human tester count** | _Default: 1 (you, the developer). If >1, testers receive a test template per session._ |
-| **Beta tester coordination** (if >1 tester) | _How to reach testers (email, Slack, Discord). How they receive builds (TestFlight, staging URL, GitHub pre-release, download link)._ |
-| **Bug severity SLAs** (Full UAT level only) | SEV-1: ___h / SEV-2: ___d / SEV-3: ___d _(default: SEV-1 24h, SEV-2 7d, SEV-3 best effort)_ |
+| **Testing interval** | Every 2 features (default) |
+| **Bug tracking tool** | BUGS.md |
+| **Human tester count** | 1 (the developer) |
+| **Beta tester coordination** (if >1 tester) | N/A |
+| **Bug severity SLAs** (Full UAT level only) | N/A (Light track defaults: SEV-1 24h, SEV-2 7d, SEV-3 best effort) |
 
 > **How this is used:** The agent pauses construction every N features to run a UAT testing session. Agent testers run automated, exploratory, and cross-platform tests in parallel while you test manually. Bugs are compiled, triaged, and fixed before construction resumes. See Steps 2.7-2.9 in the Builder's Guide.
 
@@ -539,7 +526,7 @@ architecture, code, and documentation within the constraints I set.
 ATTACHED:
 1. Project Intake Template (this document) — your primary constraint
 2. Solo Orchestrator Builder's Guide v1.0 — your process reference
-3. Platform Module: [WEB / DESKTOP / MOBILE] — your platform-specific
+3. Platform Module: WEB — your platform-specific
    reference for architecture, tooling, testing, and distribution
 
 DOCUMENT RELATIONSHIP:
@@ -579,13 +566,14 @@ RULES:
   immediately — do not silently work around it.
 
 ACCESSIBILITY (from Section 9):
-[Copy any specific requirements here, e.g., "Color vision deficiency:
-never rely on color alone for meaning. Use shape, position, text labels,
-patterns, or icons."]
+WCAG AA. Color vision deficiency: never rely on color alone for meaning.
+Highlight colors are user-chosen labels, but active-highlight indication,
+note markers, and all controls must use shape, position, text labels,
+patterns, or icons in addition to color.
 
-PROJECT TRACK: [Light / Standard / Full]
-PLATFORM: [Web / Desktop / Mobile / Other]
-TARGET PLATFORMS: [e.g., Windows 10+, macOS 12+, Ubuntu 22.04+]
+PROJECT TRACK: Light
+PLATFORM: Web
+TARGET PLATFORMS: Web — last 2 versions of Chrome, Firefox, Safari, Edge (desktop)
 
 BEGIN: Execute Phase 0, Step 0.1 using the "With Intake — Validation
 Prompt" path from the Builder's Guide. Use Sections 2 and 4 of the
@@ -602,17 +590,17 @@ recommended addition.
 
 ## Checklist Before Starting
 
-- [ ] Every field is filled in or explicitly marked N/A
-- [ ] Must-Have features all have business logic triggers (If X, then Y)
-- [ ] Must-Have features all have failure states defined
-- [ ] Will-Not-Have list has at least 3 items
-- [ ] Data sensitivity classifications are assigned to all inputs
-- [ ] Competency Matrix is completed honestly
-- [ ] Budget constraints are realistic (not aspirational)
-- [ ] Timeline includes Orchestrator availability, not just calendar dates
-- [ ] For organizational deployments: all Section 8 "Blocking" items are Complete
-- [ ] Success/failure exit criteria are defined and a decision-maker is named
-- [ ] This document has been saved as `PROJECT_INTAKE.md` in the project repository
+- [x] Every field is filled in or explicitly marked N/A
+- [x] Must-Have features all have business logic triggers (If X, then Y)
+- [x] Must-Have features all have failure states defined
+- [x] Will-Not-Have list has at least 3 items
+- [x] Data sensitivity classifications are assigned to all inputs
+- [x] Competency Matrix is completed honestly
+- [x] Budget constraints are realistic (not aspirational)
+- [x] Timeline includes Orchestrator availability, not just calendar dates
+- [x] For organizational deployments: all Section 8 "Blocking" items are Complete (N/A — personal)
+- [x] Success/failure exit criteria are defined and a decision-maker is named
+- [x] This document has been saved as `PROJECT_INTAKE.md` in the project repository
 
 ---
 
@@ -621,6 +609,7 @@ recommended addition.
 | Version | Date | Changes |
 |---|---|---|
 | 1.0 | 2026-04-02 | Initial release. |
+| 1.0 (filled) | 2026-08-02 | Intake completed for DocNote (docnote-walkthrough) by the Orchestrator with AI assistance. |
 
 ---
 
@@ -647,4 +636,3 @@ recommended addition.
 | Superpowers | claude_plugin | installed |
 | Context7 MCP | mcp_server | configured |
 | Qdrant MCP | mcp_server | configured |
-
