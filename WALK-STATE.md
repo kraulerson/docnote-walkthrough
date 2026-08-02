@@ -30,20 +30,27 @@ Fixed: GitHub, public repo, personal, web, TypeScript, repo `docnote-walkthrough
       + all SEV-2 + cheap SEV-3/4 FIXED test-first; SEV-3 a11y/robustness
       (BUG-9..14) DEFERRED to Phase 3. Session marked complete (9/9).
 - [x] Feature 2 + remediation committed de16e01, pushed. Build loop closed.
-- [ ] Feature 3 (remove-highlight) — NEXT
-- [ ] Feature 4 (notes: attach/edit/delete)
-- [ ] Feature 5 (notes side panel + click-to-jump)  [UAT session 2 after F3+F4]
-- [ ] Feature 6 (localStorage persistence per document) [UAT session 3 after F5+F6]
-- [ ] Phase 2→3 gate (no open SEV-1/2; bug gate)
+- [x] Feature 3 (remove-highlight) — committed a55a1f1
+- [x] Feature 4 (notes: attach/edit/delete) — committed 745d62b
+- [x] UAT Session 2 (F3+F4): exploratory agent + live Chrome. 7 findings
+      (2 SEV-2: wrong-note-save missing key, remove-confirmation missing).
+      Fixed BUG-20..23,25,26 (fda79ef); BUG-24 (Esc/focus) deferred → Phase 3.
+- [x] Feature 5 (notes panel ordering + click-to-jump + unlocated) — 8609772
+- [x] Feature 6 (localStorage persistence, content-hash) — 6bba7d8;
+      restore-across-reload LIVE-verified in Chrome. ALL 6 MVP features built.
+      108 tests green, semgrep 0 findings.
+- [ ] UAT Session 3 (F5+F6) — IN PROGRESS (required now)
+- [ ] Phase 2 completion checkpoint + Phase 2→3 gate (no open SEV-1/2; bug gate)
 - [ ] Phase 3: 5 validation scanners + 6 reviewer evals + a11y/robustness
-      (address deferred BUG-9..14 in hardening/accessibility steps) + archive
+      (address deferred SEV-3 BUG-9..14, 24 in hardening/accessibility) + archive
 - [ ] Phase 4: release v1.0.0 (tag), handoff, monitoring
 - [ ] WALK-REPORT.md + final push
 
 ## Next step
-Start Feature 3 build loop: `scripts/process-checklist.sh --start-feature
-"remove-highlight"`. Write tests first, verify RED, implement, audit, docs,
-commit `feat:` WHILE THE LOOP IS ACTIVE (see lessons), then record.
+Run UAT Session 3 for Features 5 & 6 (exploratory agent on persistence/restore
++ tampered-storage; automated suite; triage). Then Phase 2 completion checklist
+and Phase 2→3 gate. Remaining OPEN bugs are all deferred SEV-3 (BUG-9,10,11,12,
+13,14,24) for Phase 3 hardening/accessibility — no open SEV-1/2.
 
 ## HARD-WON LESSONS (do not repeat)
 - **Commit the feature WHILE the Build Loop is active** (after steps 1-5,
