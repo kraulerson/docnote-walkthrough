@@ -110,4 +110,14 @@ describe('parseDocx (Feature 1: open & render .docx read-only)', () => {
     );
     expect(performance.now() - started).toBeLessThan(1000);
   });
+
+  it('should reject a LYING decompression bomb by actual inflation, not advertised size (RT-01/BUG-32)', async () => {
+    // lying-bomb.docx under-reports its uncompressed size (500) in the ZIP
+    // central directory but really inflates to ~33.6 MB. The advertised-size
+    // guard is fooled; the actual bounded-inflation guard must still reject it.
+    await expectCode(
+      parseDocx(await fixture('lying-bomb.docx'), { maxUncompressedBytes: 5_000_000 }),
+      'file-too-large',
+    );
+  });
 });

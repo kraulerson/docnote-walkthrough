@@ -2,8 +2,15 @@
  * BUG-1 (SEV-1) regression: reject a decompression bomb BEFORE mammoth
  * inflates it, by summing the zip central directory's uncompressed sizes.
  */
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { uncompressedSizeExceeds } from './zipGuard';
+import { actualUncompressedExceeds, uncompressedSizeExceeds } from './zipGuard';
+
+async function fixtureBuffer(name: string): Promise<ArrayBuffer> {
+  const buf = await readFile(join(__dirname, '__fixtures__', name));
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+}
 
 // Build a minimal ZIP (one stored entry) whose central-directory record
 // advertises a huge uncompressed size. We only need the guard to READ the
@@ -58,5 +65,25 @@ describe('uncompressedSizeExceeds (BUG-1 decompression-bomb guard)', () => {
   it('should fail safe (not exceeded) for a buffer with no EOCD record', () => {
     // Non-zip garbage: guard cannot read sizes; mammoth will reject it as invalid.
     expect(uncompressedSizeExceeds(new Uint8Array([1, 2, 3, 4]).buffer, 10)).toBe(false);
+  });
+});
+
+describe('actualUncompressedExceeds (RT-01/BUG-32 — bounded real inflation)', () => {
+  it('should catch a LYING bomb whose central directory under-reports its size', async () => {
+    // lying-bomb.docx advertises 500 bytes but inflates to ~33.6 MB.
+    const bomb = await fixtureBuffer('lying-bomb.docx');
+    // The advertised-size guard is fooled...
+    expect(uncompressedSizeExceeds(bomb, 5_000_000)).toBe(false);
+    // ...but the actual-inflation guard is not.
+    expect(await actualUncompressedExceeds(bomb, 5_000_000)).toBe(true);
+  });
+
+  it('should pass a legitimate small document', async () => {
+    const valid = await fixtureBuffer('valid.docx');
+    expect(await actualUncompressedExceeds(valid, 50_000_000)).toBe(false);
+  });
+
+  it('should fail safe (false) for non-zip bytes', async () => {
+    expect(await actualUncompressedExceeds(new Uint8Array([1, 2, 3, 4]).buffer, 10)).toBe(false);
   });
 });

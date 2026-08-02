@@ -9,7 +9,7 @@ import { DocNoteError } from './errors';
 import { log } from './log';
 import { sanitizeToFragment } from './sanitize';
 import { MAX_DOCUMENT_BYTES, MAX_EXTRACTED_CHARS, MAX_UNCOMPRESSED_BYTES } from './types';
-import { uncompressedSizeExceeds } from './zipGuard';
+import { actualUncompressedExceeds, uncompressedSizeExceeds } from './zipGuard';
 
 export interface ParsedDocument {
   /** Sanitized, inert DOM of the document body. Insert-ready. */
@@ -40,11 +40,18 @@ export async function parseDocx(
     throw new DocNoteError('file-too-large');
   }
 
-  // BUG-1: reject decompression bombs on the advertised uncompressed size,
-  // BEFORE mammoth inflates anything.
+  // BUG-1: fast reject on the advertised uncompressed size (cheap, catches
+  // honest bombs before any inflation).
   const maxUncompressed = options.maxUncompressedBytes ?? MAX_UNCOMPRESSED_BYTES;
   if (uncompressedSizeExceeds(buffer, maxUncompressed)) {
     log('warn', 'parse.rejected', { reason: 'uncompressed-too-large', limit: maxUncompressed });
+    throw new DocNoteError('file-too-large');
+  }
+  // RT-01 / BUG-32: the advertised size is attacker-controlled, so also verify
+  // by ACTUAL bounded inflation — a ZIP that lies about its size cannot slip a
+  // bomb past this (early-aborts at the budget, never materializes it all).
+  if (await actualUncompressedExceeds(buffer, maxUncompressed)) {
+    log('warn', 'parse.rejected', { reason: 'uncompressed-too-large-actual', limit: maxUncompressed });
     throw new DocNoteError('file-too-large');
   }
 
