@@ -1,10 +1,12 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { anchorFromRange, anchorsIntersect } from '../core/anchors';
+import { loadAnnotations, saveAnnotations } from '../core/annotationRepository';
 import { DocNoteError, ERROR_MESSAGES } from '../core/errors';
+import { hashText } from '../core/hash';
 import { log } from '../core/log';
 import type { ParsedDocument } from '../core/parseDocx';
 import { parseDocx } from '../core/parseDocx';
-import type { Highlight, HighlightColor, TextAnchor } from '../core/types';
+import type { AnnotationStore, Highlight, HighlightColor, TextAnchor } from '../core/types';
 import { MAX_DOCUMENT_BYTES } from '../core/types';
 import { Banner } from './Banner';
 import { DocumentView } from './DocumentView';
@@ -33,7 +35,12 @@ export function App() {
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
   const [noteEditorFor, setNoteEditorFor] = useState<string | null>(null);
   const [unlocatedIds, setUnlocatedIds] = useState<ReadonlySet<string>>(new Set());
+  const [docHash, setDocHash] = useState<string | null>(null);
   const documentContainer = useRef<HTMLDivElement | null>(null);
+  // Persistence bookkeeping: only save changes made AFTER a restore, and warn
+  // about unavailable storage at most once per document.
+  const restoredForHash = useRef<string | null>(null);
+  const storageUnavailableWarned = useRef(false);
   // BUG-4: monotonic token so a slow parse of an earlier file cannot overwrite
   // the result of a later-picked file (concurrent-open race).
   const openToken = useRef(0);
@@ -54,7 +61,23 @@ export function App() {
       if (token !== openToken.current) {
         return; // a newer open superseded this one — drop the stale result
       }
-      setHighlights([]);
+      // Feature 6: compute document identity and restore any stored annotations.
+      let hash: string | null = null;
+      let restored: readonly Highlight[] = [];
+      try {
+        hash = await hashText(parsed.fullText);
+        if (token !== openToken.current) {
+          return;
+        }
+        restored = loadAnnotations(hash)?.highlights ?? [];
+      } catch {
+        // Web Crypto unavailable (e.g. non-secure origin) → session-only mode.
+        hash = null;
+      }
+      storageUnavailableWarned.current = false;
+      restoredForHash.current = hash;
+      setDocHash(hash);
+      setHighlights(restored);
       setActiveHighlightId(null);
       setNoteEditorFor(null);
       setUnlocatedIds(new Set());
@@ -241,6 +264,36 @@ export function App() {
   const setDocumentContainer = useCallback((element: HTMLDivElement | null) => {
     documentContainer.current = element;
   }, []);
+
+  // Feature 6: persist annotations to localStorage on every change, once a
+  // document with a resolved identity is open. Failures degrade gracefully:
+  // storage-unavailable warns once, quota warns each time the latest change
+  // could not be saved. Session-only mode (hash === null) skips persistence.
+  useEffect(() => {
+    if (view.kind !== 'ready' || docHash === null) {
+      return;
+    }
+    const now = new Date().toISOString();
+    const store: AnnotationStore = {
+      schemaVersion: 1,
+      docHash,
+      highlights: [...highlights],
+      createdAt: now,
+      updatedAt: now,
+    };
+    const result = saveAnnotations(store);
+    if (result.ok) {
+      return;
+    }
+    if (result.reason === 'unavailable') {
+      if (!storageUnavailableWarned.current) {
+        storageUnavailableWarned.current = true;
+        setError(ERROR_MESSAGES['storage-unavailable']);
+      }
+    } else {
+      setError(ERROR_MESSAGES['storage-full']);
+    }
+  }, [highlights, docHash, view.kind]);
 
   return (
     <div className="app-shell">

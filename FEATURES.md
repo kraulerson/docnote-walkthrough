@@ -67,4 +67,16 @@
 
 ---
 
+## Feature 6: local-persistence
+
+**Phase Built:** 2
+**Status:** Complete
+**Summary:** Highlights and notes persist to browser localStorage, keyed by a SHA-256 hash of the extracted document text (Web Crypto). Re-opening the same document restores them (live-verified across a full page reload). The repository is the ONLY module that touches localStorage; reads validate strictly and fail safe (discard corrupt/unknown-version data); writes never throw — quota and unavailable storage degrade to a warning and session-only mode.
+**Key Interfaces:** src/core/hash.ts (`hashText`), src/core/annotationRepository.ts (`loadAnnotations`, `saveAnnotations`), src/ui/App.tsx (open-time restore + save effect)
+**Related ADRs:** docs/ADR documentation/ADR-0001-architecture-selection.md
+**Test Coverage:** Unit (hash determinism/format; repository round-trip, missing key, corrupt JSON, bad schema, quota, unavailable) + App flow (restore across remount, unavailable warning, per-hash isolation).
+**Known Limitations:** Unencrypted at rest (documented residual, TM-005). Non-secure-origin (no Web Crypto) falls back to session-only mode.
+
+---
+
 <!-- Copy the section above for each new feature. Number sequentially. -->

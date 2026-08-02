@@ -39,6 +39,10 @@ for handoff clarity. Categories are ordered by impact severity.
   (0 open findings; decompression-bomb residual accepted per TM-007).
 
 ### Data Model
+- Feature 6 — local-persistence: annotations persist to localStorage keyed by
+  a SHA-256 content hash of the document text (schemaVersion 1). Re-opening the
+  same document restores highlights + notes; corrupt/unknown-version data is
+  discarded safely; quota/unavailable storage degrade gracefully with a warning.
 - Annotation data model types (AnnotationStore/Highlight/TextAnchor/Note,
   schemaVersion 1) defined in src/core/types.ts. No storage behavior yet.
 
