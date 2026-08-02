@@ -39,6 +39,8 @@ for handoff clarity. Categories are ordered by impact severity.
   (0 open findings; decompression-bomb residual accepted per TM-007).
 
 ### Data Model
+- Restore-path hardening: annotation stores load through a fresh-reconstruction
+  validator (drops unknown/out-of-spec fields) and preserve createdAt.
 - Feature 6 — local-persistence: annotations persist to localStorage keyed by
   a SHA-256 content hash of the document text (schemaVersion 1). Re-opening the
   same document restores highlights + notes; corrupt/unknown-version data is
@@ -73,6 +75,18 @@ for handoff clarity. Categories are ordered by impact severity.
 ### Changed
 
 ### Fixed
+- UAT Session 3 remediation (Features 5-6, found by the exploratory agent):
+  - BUG-27 (SEV-3): the store's createdAt is now preserved across changes and
+    reloads (the restore no longer triggers a redundant save that overwrote it).
+  - BUG-28/29 (SEV-3/4): loadAnnotations now validates INTO fresh typed
+    structures (Bible §4 vuln#3 / TM-003) — tampered extra fields are dropped,
+    out-of-spec notes are dropped (highlight kept), invalid anchors reject the
+    highlight.
+  - BUG-30 (SEV-3): parseDocx computes fullText/paragraphCount with the same
+    leaf-only block model as the anchor engine, so docHash no longer
+    double-counts nested table/list blocks.
+  - BUG-31 (SEV-4): the notes panel now shows the highlighted excerpt preview
+    (Bible §9), rendered as text.
 - UAT Session 2 remediation (Features 3-4, found by the exploratory agent + a
   live browser pass):
   - BUG-20 (SEV-2): NoteEditor now keyed by target highlight, so switching the

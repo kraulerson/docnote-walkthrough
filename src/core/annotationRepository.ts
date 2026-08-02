@@ -5,8 +5,8 @@
  * UI can warn and keep working (Bible §5, Manifesto failure states).
  */
 import { log } from './log';
-import type { AnnotationStore, Highlight, HighlightColor, TextAnchor } from './types';
-import { HIGHLIGHT_COLORS, STORAGE_KEY_PREFIX } from './types';
+import type { AnnotationStore, Highlight, HighlightColor, Note, TextAnchor } from './types';
+import { HIGHLIGHT_COLORS, MAX_NOTE_CHARS, STORAGE_KEY_PREFIX } from './types';
 
 export type SaveResult = { ok: true } | { ok: false; reason: 'quota' | 'unavailable' };
 
@@ -48,11 +48,114 @@ export function loadAnnotations(docHash: string): AnnotationStore | null {
     log('warn', 'storage.corrupt', { reason: 'invalid_json' });
     return null;
   }
-  if (!isValidStore(parsed, docHash)) {
+  // BUG-28/29 (Bible §4 vuln #3 / TM-003): validate INTO fresh typed structures
+  // instead of trusting the parsed graph. Unknown fields are dropped; a highlight
+  // with an invalid anchor is dropped; a note that violates the 1-1000 rule is
+  // dropped (its highlight is kept). A store that isn't shaped like a v1 store at
+  // all is discarded entirely.
+  const rebuilt = reconstructStore(parsed, docHash);
+  if (rebuilt === null) {
     log('warn', 'storage.corrupt', { reason: 'schema' });
+  }
+  return rebuilt;
+}
+
+function reconstructStore(value: unknown, expectedHash: string): AnnotationStore | null {
+  if (typeof value !== 'object' || value === null) {
     return null;
   }
-  return parsed;
+  const v = value as Record<string, unknown>;
+  if (v.schemaVersion !== 1 || v.docHash !== expectedHash || !Array.isArray(v.highlights)) {
+    return null;
+  }
+  const highlights: Highlight[] = [];
+  for (const raw of v.highlights) {
+    const rebuilt = reconstructHighlight(raw);
+    if (rebuilt !== null) {
+      highlights.push(rebuilt);
+    }
+  }
+  return {
+    schemaVersion: 1,
+    docHash: expectedHash,
+    highlights,
+    createdAt: typeof v.createdAt === 'string' ? v.createdAt : new Date(0).toISOString(),
+    updatedAt: typeof v.updatedAt === 'string' ? v.updatedAt : new Date(0).toISOString(),
+  };
+}
+
+function reconstructHighlight(value: unknown): Highlight | null {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+  const h = value as Record<string, unknown>;
+  if (typeof h.id !== 'string' || !HIGHLIGHT_COLORS.includes(h.color as HighlightColor)) {
+    return null;
+  }
+  const anchor = reconstructAnchor(h.anchor);
+  if (anchor === null) {
+    return null;
+  }
+  const highlight: Highlight = {
+    id: h.id,
+    color: h.color as HighlightColor,
+    anchor,
+    createdAt: typeof h.createdAt === 'string' ? h.createdAt : new Date(0).toISOString(),
+    updatedAt: typeof h.updatedAt === 'string' ? h.updatedAt : new Date(0).toISOString(),
+  };
+  const note = reconstructNote(h.note);
+  if (note !== null) {
+    highlight.note = note;
+  }
+  return highlight;
+}
+
+function reconstructAnchor(value: unknown): TextAnchor | null {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+  const a = value as Record<string, unknown>;
+  const { paragraphIndex, startOffset, endOffset, exactText } = a;
+  if (
+    !Number.isInteger(paragraphIndex) ||
+    !Number.isInteger(startOffset) ||
+    !Number.isInteger(endOffset) ||
+    typeof exactText !== 'string' ||
+    (paragraphIndex as number) < 0 ||
+    (startOffset as number) < 0 ||
+    (endOffset as number) <= (startOffset as number)
+  ) {
+    return null;
+  }
+  return {
+    paragraphIndex: paragraphIndex as number,
+    startOffset: startOffset as number,
+    endOffset: endOffset as number,
+    exactText,
+  };
+}
+
+/** Returns null when there is no note or the note violates the data model. */
+function reconstructNote(value: unknown): Note | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  if (typeof value !== 'object') {
+    return null;
+  }
+  const n = value as Record<string, unknown>;
+  if (typeof n.text !== 'string') {
+    return null;
+  }
+  const trimmedLength = n.text.trim().length;
+  if (trimmedLength === 0 || n.text.length > MAX_NOTE_CHARS) {
+    return null; // drop an out-of-spec note; the highlight is kept
+  }
+  return {
+    text: n.text,
+    createdAt: typeof n.createdAt === 'string' ? n.createdAt : new Date(0).toISOString(),
+    updatedAt: typeof n.updatedAt === 'string' ? n.updatedAt : new Date(0).toISOString(),
+  };
 }
 
 function isQuotaError(error: unknown): boolean {
@@ -62,53 +165,3 @@ function isQuotaError(error: unknown): boolean {
   );
 }
 
-/** Strict shape + version validation. Anything off → invalid → safe discard. */
-function isValidStore(value: unknown, expectedHash: string): value is AnnotationStore {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const v = value as Record<string, unknown>;
-  if (v.schemaVersion !== 1) {
-    return false;
-  }
-  if (v.docHash !== expectedHash) {
-    return false;
-  }
-  if (!Array.isArray(v.highlights)) {
-    return false;
-  }
-  return v.highlights.every(isValidHighlight);
-}
-
-function isValidHighlight(value: unknown): value is Highlight {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const h = value as Record<string, unknown>;
-  if (typeof h.id !== 'string') {
-    return false;
-  }
-  if (!HIGHLIGHT_COLORS.includes(h.color as HighlightColor)) {
-    return false;
-  }
-  if (!isValidAnchor(h.anchor)) {
-    return false;
-  }
-  if (h.note !== undefined && typeof (h.note as Record<string, unknown>)?.text !== 'string') {
-    return false;
-  }
-  return true;
-}
-
-function isValidAnchor(value: unknown): value is TextAnchor {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const a = value as Record<string, unknown>;
-  return (
-    typeof a.paragraphIndex === 'number' &&
-    typeof a.startOffset === 'number' &&
-    typeof a.endOffset === 'number' &&
-    typeof a.exactText === 'string'
-  );
-}

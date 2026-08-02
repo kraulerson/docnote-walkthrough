@@ -43,6 +43,11 @@ export function NotesPanel({ highlights, onJump, unlocatedIds }: NotesPanelProps
                     <span aria-hidden="true">⚠</span> unlocated
                   </span>
                 )}
+                {/* Excerpt preview of the highlighted passage (Bible §9). Plain
+                    text via a React child — never HTML. */}
+                <span className="note-excerpt" title={h.anchor.exactText}>
+                  {h.anchor.exactText}
+                </span>
                 {onJump && !isUnlocated ? (
                   <button type="button" className="note-jump" onClick={() => onJump(h.id)}>
                     {h.note?.text}

@@ -37,9 +37,11 @@ export function App() {
   const [unlocatedIds, setUnlocatedIds] = useState<ReadonlySet<string>>(new Set());
   const [docHash, setDocHash] = useState<string | null>(null);
   const documentContainer = useRef<HTMLDivElement | null>(null);
-  // Persistence bookkeeping: only save changes made AFTER a restore, and warn
-  // about unavailable storage at most once per document.
-  const restoredForHash = useRef<string | null>(null);
+  // Persistence bookkeeping (BUG-27): skip the redundant save the restore would
+  // otherwise trigger, preserve the store's original createdAt across changes and
+  // reloads, and warn about unavailable storage at most once per document.
+  const skipNextSave = useRef(false);
+  const docStoreCreatedAt = useRef<string | null>(null);
   const storageUnavailableWarned = useRef(false);
   // BUG-4: monotonic token so a slow parse of an earlier file cannot overwrite
   // the result of a later-picked file (concurrent-open race).
@@ -64,18 +66,24 @@ export function App() {
       // Feature 6: compute document identity and restore any stored annotations.
       let hash: string | null = null;
       let restored: readonly Highlight[] = [];
+      let restoredCreatedAt: string | null = null;
       try {
         hash = await hashText(parsed.fullText);
         if (token !== openToken.current) {
           return;
         }
-        restored = loadAnnotations(hash)?.highlights ?? [];
+        const stored = loadAnnotations(hash);
+        restored = stored?.highlights ?? [];
+        restoredCreatedAt = stored?.createdAt ?? null;
       } catch {
         // Web Crypto unavailable (e.g. non-secure origin) → session-only mode.
         hash = null;
       }
       storageUnavailableWarned.current = false;
-      restoredForHash.current = hash;
+      docStoreCreatedAt.current = restoredCreatedAt;
+      // The state updates below trigger the save effect once; skip that write so
+      // a restore does not immediately rewrite the store (and clobber createdAt).
+      skipNextSave.current = true;
       setDocHash(hash);
       setHighlights(restored);
       setActiveHighlightId(null);
@@ -273,12 +281,20 @@ export function App() {
     if (view.kind !== 'ready' || docHash === null) {
       return;
     }
+    // BUG-27: the render right after a restore must not rewrite the store.
+    if (skipNextSave.current) {
+      skipNextSave.current = false;
+      return;
+    }
     const now = new Date().toISOString();
+    // Preserve the original creation time across every change and reload.
+    const createdAt = docStoreCreatedAt.current ?? now;
+    docStoreCreatedAt.current = createdAt;
     const store: AnnotationStore = {
       schemaVersion: 1,
       docHash,
       highlights: [...highlights],
-      createdAt: now,
+      createdAt,
       updatedAt: now,
     };
     const result = saveAnnotations(store);

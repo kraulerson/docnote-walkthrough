@@ -1,6 +1,6 @@
 # Project Bible — DocNote (docnote-walkthrough)
 
-<!-- Last Updated: 2026-08-02 (Phase 2 — Feature 6 local-persistence complete; ALL MVP features built) -->
+<!-- Last Updated: 2026-08-02 (Phase 2 — all MVP features built; UAT Session 3 remediation complete) -->
 
 **Status:** Approved (Phase 1 → 2 gate)
 **Approved By:** Karl (Orchestrator, self-review — personal project)

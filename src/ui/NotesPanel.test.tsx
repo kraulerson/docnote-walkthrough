@@ -42,6 +42,13 @@ describe('NotesPanel — Feature 5', () => {
     expect(onJump).toHaveBeenCalledWith('h1');
   });
 
+  it('should show the highlighted excerpt preview alongside the note (BUG-31)', () => {
+    const h = hl('h1', 0, 0, 'my note');
+    h.anchor.exactText = 'the exact highlighted passage';
+    render(<NotesPanel highlights={[h]} onJump={() => {}} unlocatedIds={new Set()} />);
+    expect(screen.getByText(/the exact highlighted passage/i)).toBeInTheDocument();
+  });
+
   it('should mark an unlocated note with a text badge and not offer a jump button', () => {
     const onJump = vi.fn();
     render(

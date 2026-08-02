@@ -74,6 +74,52 @@ describe('App — Feature 6: local persistence', () => {
     });
   });
 
+  it('should preserve the store createdAt across a change and a reopen (BUG-27)', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<App />);
+    let region = await openValid();
+    highlightPhrase(region, 'revenue grew', 'launch shipped');
+    await user.click(await screen.findByRole('button', { name: /yellow/i }));
+    await currentMark(region, 'hl-yellow');
+
+    const keyOf = () => {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('docnote.v1.')) {
+          return k;
+        }
+      }
+      return undefined as unknown as string;
+    };
+    await waitFor(() => expect(keyOf()).toBeTruthy());
+    const createdAfterFirst = JSON.parse(localStorage.getItem(keyOf())!).createdAt as string;
+
+    // Make another change — createdAt must NOT change.
+    highlightPhrase(region, 'Closing paragraph', 'Closing');
+    await user.click(await screen.findByRole('button', { name: /green/i }));
+    await currentMark(region, 'hl-green');
+    await waitFor(() => {
+      const store = JSON.parse(localStorage.getItem(keyOf())!);
+      expect(store.highlights).toHaveLength(2);
+    });
+    expect(JSON.parse(localStorage.getItem(keyOf())!).createdAt).toBe(createdAfterFirst);
+
+    // Reopen the same document — createdAt still preserved.
+    unmount();
+    render(<App />);
+    region = await openValid();
+    await currentMark(region, 'hl-yellow');
+    // Adding a change after reopen keeps the original createdAt.
+    highlightPhrase(region, 'Unicode check', 'Unicode');
+    await user.click(await screen.findByRole('button', { name: /blue/i }));
+    await currentMark(region, 'hl-blue');
+    await waitFor(() => {
+      const store = JSON.parse(localStorage.getItem(keyOf())!);
+      expect(store.highlights).toHaveLength(3);
+    });
+    expect(JSON.parse(localStorage.getItem(keyOf())!).createdAt).toBe(createdAfterFirst);
+  });
+
   it('should warn once and keep working when localStorage is unavailable', async () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('storage disabled');

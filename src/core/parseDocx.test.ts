@@ -76,6 +76,15 @@ describe('parseDocx (Feature 1: open & render .docx read-only)', () => {
     expect(parsed.paragraphCount).toBe(5);
   });
 
+  it('should count LEAF blocks only, not double-count nested table paragraphs (BUG-30)', async () => {
+    // nested.docx: a table cell with two <p> + one paragraph after = 3 leaf blocks.
+    // The naive selector would also count the cell/row wrappers, inflating this.
+    const parsed = await parseDocx(await fixture('nested.docx'));
+    expect(parsed.paragraphCount).toBe(3);
+    // fullText must not repeat the cell text (docHash is computed over this).
+    expect(parsed.fullText).toBe('CellOne\nCellTwo\nAfterTable');
+  });
+
   it('should keep literal markup typed in the document as text, never as elements', async () => {
     const parsed = await parseDocx(await fixture('valid.docx'));
     expect(parsed.fragment.querySelector('img')).toBeNull();

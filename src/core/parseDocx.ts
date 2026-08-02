@@ -4,6 +4,7 @@
  * extract text/paragraphs → enforce content caps.
  */
 import mammoth from 'mammoth';
+import { getBlockElements } from './anchors';
 import { DocNoteError } from './errors';
 import { log } from './log';
 import { sanitizeToFragment } from './sanitize';
@@ -26,8 +27,6 @@ export interface ParseOptions {
   maxChars?: number;
   maxUncompressedBytes?: number;
 }
-
-const BLOCK_SELECTOR = 'p, h1, h2, h3, h4, h5, h6, li, td, th, pre, blockquote';
 
 export async function parseDocx(
   buffer: ArrayBuffer,
@@ -73,10 +72,11 @@ export async function parseDocx(
 
   const fragment = sanitizeToFragment(html);
 
-  const blocks = Array.from(fragment.querySelectorAll(BLOCK_SELECTOR));
-  const blockTexts = blocks
-    .map((el) => el.textContent ?? '')
-    .filter((text) => text.trim().length > 0);
+  // BUG-30: use the SAME leaf-only block model as the anchor engine, so
+  // paragraphCount and the docHash (computed over fullText) never double-count
+  // nested blocks (td>p, li>ul>li) — keeping identity consistent with anchoring.
+  const blocks = getBlockElements(fragment);
+  const blockTexts = blocks.map((el) => el.textContent ?? '');
   const fullText = blockTexts.join('\n');
 
   if (fullText.trim().length === 0) {

@@ -382,3 +382,17 @@ mark.hl-jump-target {
     outline: 2px solid Highlight;
   }
 }
+
+.note-excerpt {
+  flex: 1 1 100%;
+  font-size: 0.78rem;
+  color: #555;
+  border-left: 3px solid var(--color-border);
+  padding-left: 0.4rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
