@@ -1,0 +1,65 @@
+# WALK-ISSUE-LOG — Solo Orchestrator first-time-user walkthrough
+
+Append-only log of every issue, confusion, and smooth step encountered while
+building DocNote with the Solo Orchestrator framework as a junior developer.
+
+Severity scale: Blocker / Major / Minor / Confusion. Smooth steps noted inline.
+
+---
+
+### ISSUE-000 — Walkthrough harness note (not a framework issue)
+When: 2026-08-02 ~08:45 | Where: session start
+Expected: n/a
+Actual: The Claude Code harness automatically injected the framework repo's
+internal `CLAUDE.md` into my context when I cloned it. Persona rules forbid
+reading framework internals. I am deliberately not acting on anything from that
+file; all decisions come from README / User Guide / generated files only.
+Severity: (none — honesty note)
+Resolution: documented-path (ignored the injected content)
+Time lost: 0
+
+---
+
+### SMOOTH — Clone + README
+When: 2026-08-02 ~08:45 | Where: README
+`git clone https://github.com/kraulerson/solo-orchestrator.git` worked first
+try. README is long but clearly signposted: "Read the User Guide first",
+Quick Start block, prerequisites table. The prerequisites table explicitly
+warns that `gh` must be installed AND authenticated before running init —
+good, that's the kind of thing I'd have missed.
+
+---
+
+### SMOOTH — init.sh non-interactive path
+When: 2026-08-02 ~08:47 | Where: README Quick Start → init.sh
+`./init.sh --help` clearly documents a `--non-interactive` mode "for CI, UAT,
+AI agents" and `--help-non-interactive` prints a full flag schema with examples
+and defaults. `--validate-only` previewed my resolved config as JSON before I
+committed to anything. Flags were accepted exactly as documented; project dir
+resolved to a sibling of the clone as both README and help text promised.
+
+### ISSUE-001 — Walkthrough environment note: all tools were preinstalled
+When: 2026-08-02 ~08:48 | Where: init.sh tool plan
+Expected: README says init "offers to auto-install" Git, Node, security tools —
+a first-time user would experience install prompts.
+Actual: This machine already had every tool (git, node, jq, docker, colima,
+gpg, semgrep, gitleaks, snyk, claude code, CDF, superpowers, context7, qdrant),
+so the tool-installation UX was not exercised in this walk. Init printed a
+clean "Already installed" plan table.
+Severity: Minor (walkthrough coverage gap, not a framework bug)
+Resolution: documented-path (nothing to do)
+Time lost: 0
+
+---
+
+### ISSUE-002 — snyk auth requires a browser; cannot complete autonomously
+When: 2026-08-02 ~08:52 | Where: init.sh "Next Steps" step 1 / User Guide §2 Post-Init Authentication
+Expected: "Authenticate: `claude` (OAuth) and `snyk auth`" — both one-time per machine.
+Actual: `claude` was already authenticated. `snyk whoami` returns
+"Authentication error (SNYK-0005)". `snyk auth` opens a browser OAuth flow,
+which this autonomous session cannot complete. Docs offer no token-based
+alternative instruction at this point in the flow.
+Severity: Confusion (not yet blocking — snyk is first needed in Phase 3; will
+escalate to Blocker if still unauthenticated when Phase 3 requires it)
+Resolution: unresolved (deferred; operator may run `! snyk auth`)
+Time lost: 2
