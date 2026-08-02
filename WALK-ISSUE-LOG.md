@@ -397,3 +397,28 @@ running inside Claude Code. The manifest schema + linter are solid.
 Severity: Minor (achieved the same outcome a different documented way — compose.sh)
 Resolution: documented-path (compose.sh + subagents + lint-review-manifest.sh)
 Time lost: 5
+
+---
+
+### SMOOTH — semgrep-full-tree (--config auto) caught a regression my src/-only scan missed
+When: 2026-08-02 ~14:45 | Where: Phase 3 gate / run-phase3-validation.sh semgrep-full-tree
+When I configured release.yml for GitHub Pages I used version tags
+(actions/deploy-pages@v4 etc.). My Step-2.4/manual semgrep runs scan only
+src/, so they said 0 findings. But the Phase-3 gate's `semgrep-full-tree`
+scanner runs `--config auto` over the WHOLE repo and flagged 3 findings —
+mutable GitHub Actions tag references (a real supply-chain hardening item the
+security reviewer had praised me for elsewhere). I pinned all three Pages
+actions to commit SHAs (fetched via `gh api .../git/ref/tags/<v>`), re-ran,
+and it's back to PASS. Good: the full-tree gate scanner is strictly stronger
+than the per-feature src/ scan and caught my own inconsistency. (Reinforces
+ISSUE-009: the audit-step command is weaker than the gate's.)
+
+### SMOOTH — BL-082 staleness + gitignored phase3 workdir
+When: 2026-08-02 ~14:40 | Where: Phase 3→4 gate
+Each commit changes the git tree, so the Phase-3 validation summary (which
+records the tree it validated) goes stale and the gate auto-regenerates it by
+re-running the real driver — refusing an offline/skipped semgrep when semgrep
+is installed. The transient phase3/ summaries are gitignored, so regenerating
+them doesn't itself dirty the tree. This tree-binding is good rigor: you can't
+pass the gate with a summary from an older tree. Just re-run the driver after
+your last commit.
