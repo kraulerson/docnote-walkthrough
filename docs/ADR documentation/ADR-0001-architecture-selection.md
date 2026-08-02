@@ -56,3 +56,5 @@ DocNote is a fully client-side .docx viewer with highlighting and notes (Product
 - Easier: testable framework-free core (anchor math, repository, parsing pipeline); conventional React UI; free hosting; CI already generated for TypeScript.
 - Harder: the React/non-React boundary must be respected (React must never reconcile inside the document container); mammoth output must ALWAYS pass through DOMPurify before insertion (coding standard "never do this" rule); GitHub Pages' inability to set response headers must be honestly evidenced at Phase 3 (meta-CSP + host-shipped headers documented with curl output; no false attestation in `.claude/dast-headers.json`).
 - New constraint: anchors are (paragraphIndex, startOffset, endOffset, exactText) against deterministically rendered text; changing the renderer or its version can invalidate anchors — accepted as the documented 12-month rewrite risk (Bible §4 stress test).
+
+**Amendment (2026-08-02, Phase 2 init):** the installed stable at implementation time was React 19.2.8 (this ADR drafted "React 18.x"). No aspect of the decision or its rationale changes; exact versions are pinned in package-lock.json.

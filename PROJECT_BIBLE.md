@@ -1,6 +1,6 @@
 # Project Bible — DocNote (docnote-walkthrough)
 
-<!-- Last Updated: 2026-08-02 (Phase 1 synthesis) -->
+<!-- Last Updated: 2026-08-02 (Phase 2 — Feature 1 docx-open-render complete) -->
 
 **Status:** Approved (Phase 1 → 2 gate)
 **Approved By:** Karl (Orchestrator, self-review — personal project)
@@ -40,7 +40,7 @@ N/A — Light track personal tool; no revenue model (Manifesto Appendix A: SKIPP
 
 Authoritative record: `docs/ADR documentation/ADR-0001-architecture-selection.md` (Accepted 2026-08-02). Summary:
 
-- **Stack:** TypeScript (strict) + React 18 + Vite SPA; mammoth.js for .docx → semantic HTML; DOMPurify sanitization; localStorage repository module; Vitest + jsdom + @testing-library/react; ESLint 9 flat config (typescript-eslint + eslint-plugin-security) + Prettier.
+- **Stack:** TypeScript (strict) + React 19 + Vite SPA; mammoth.js for .docx → semantic HTML; DOMPurify sanitization; localStorage repository module; Vitest + jsdom + @testing-library/react; ESLint 9 flat config (typescript-eslint + eslint-plugin-security) + Prettier.
 - **Pattern:** React owns the app shell (toolbar, notes panel, dialogs); a non-React `DocumentView` container (ref boundary) owns the sanitized rendered document and the `<mark>` highlight layer; all core logic (parse pipeline, anchor math, repository) is framework-free TypeScript under `src/core/`.
 - **Rejected:** vanilla-TS/no-framework (more hand-rolled UI state for a junior reviewer); Next.js + docx-preview (over-engineering; paged rendering breaks the anchoring model).
 - **Distribution:** static `dist/` bundle; GitHub Pages as the production deploy boundary.

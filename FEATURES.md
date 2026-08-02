@@ -7,15 +7,15 @@
   For detailed analysis, follow the links to ADRs and interface docs.
 -->
 
-## Feature 1: [Name]
+## Feature 1: docx-open-render
 
 **Phase Built:** 2
-**Status:** Complete | In Progress
-**Summary:** [2-3 sentences — what this feature does and why it exists]
-**Key Interfaces:** [Links to relevant files in docs/api and interfaces/]
-**Related ADRs:** [Links to relevant files in docs/ADR documentation/, if any]
-**Test Coverage:** [Unit / Integration / E2E — what test types cover this feature]
-**Known Limitations:** [If any, otherwise "None"]
+**Status:** Complete
+**Summary:** Opens a user-picked .docx (≤10 MB) entirely in the browser and renders its text read-only with paragraph structure. Rejects invalid, oversized, empty, and over-long documents with specific banners; hostile converter output is neutralized at the sanitizer choke point. This is the foundation every other feature renders on.
+**Key Interfaces:** docs/api and interfaces/core-parse.md (`parseDocx`, `sanitizeToFragment`, `DocNoteError`)
+**Related ADRs:** docs/ADR documentation/ADR-0001-architecture-selection.md
+**Test Coverage:** Unit (parse pipeline boundaries, sanitizer attack payloads) + Component (App states Empty/Loading/Error/Success, recovery flow). E2E arrives Phase 3.
+**Known Limitations:** Embedded images render as blocks/placeholders and are additionally blocked by the production CSP (in-scope simplification). Decompression-bomb residual accepted (TM-007, audit finding #2). Parse runs on the main thread.
 
 ---
 

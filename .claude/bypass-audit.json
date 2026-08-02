@@ -48,5 +48,29 @@
     },
     "user_response": "n/a",
     "final_outcome": "abandoned"
+  },
+  {
+    "timestamp": "2026-08-02T16:01:25Z",
+    "session_id": null,
+    "type": "terminal_commit_blocked",
+    "actor": "user_terminal",
+    "enforcement_level_at_event": "strict",
+    "details": {
+      "gate": "process-checklist"
+    },
+    "user_response": "n/a",
+    "final_outcome": "abandoned"
+  },
+  {
+    "timestamp": "2026-08-02T16:01:55Z",
+    "session_id": null,
+    "type": "terminal_commit_blocked",
+    "actor": "user_terminal",
+    "enforcement_level_at_event": "strict",
+    "details": {
+      "gate": "process-checklist"
+    },
+    "user_response": "n/a",
+    "final_outcome": "abandoned"
   }
 ]
