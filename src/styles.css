@@ -1,0 +1,75 @@
+:root {
+  --color-bg: #ffffff;
+  --color-text: #1a1a1a;
+  --color-border: #d0d0d0;
+  --color-accent: #205080;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--color-accent);
+}
+
+.app-promise {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #444444;
+}
+
+.app-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.document-area {
+  flex: 7;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.notes-panel {
+  flex: 3;
+  border-left: 1px solid var(--color-border);
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.notes-panel h2 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.landing-hint {
+  color: #555555;
+}

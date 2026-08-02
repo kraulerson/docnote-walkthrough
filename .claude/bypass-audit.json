@@ -12,5 +12,41 @@
     },
     "user_response": "n/a",
     "final_outcome": "recorded_only"
+  },
+  {
+    "timestamp": "2026-08-02T16:00:25Z",
+    "session_id": null,
+    "type": "terminal_commit_blocked",
+    "actor": "user_terminal",
+    "enforcement_level_at_event": "strict",
+    "details": {
+      "gate": "gitleaks"
+    },
+    "user_response": "n/a",
+    "final_outcome": "abandoned"
+  },
+  {
+    "timestamp": "2026-08-02T16:00:51Z",
+    "session_id": null,
+    "type": "terminal_commit_blocked",
+    "actor": "user_terminal",
+    "enforcement_level_at_event": "strict",
+    "details": {
+      "gate": "gitleaks"
+    },
+    "user_response": "n/a",
+    "final_outcome": "abandoned"
+  },
+  {
+    "timestamp": "2026-08-02T16:01:10Z",
+    "session_id": null,
+    "type": "terminal_commit_blocked",
+    "actor": "user_terminal",
+    "enforcement_level_at_event": "strict",
+    "details": {
+      "gate": "bl125_tests"
+    },
+    "user_response": "n/a",
+    "final_outcome": "abandoned"
   }
 ]
