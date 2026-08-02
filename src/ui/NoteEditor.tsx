@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MAX_NOTE_CHARS } from '../core/types';
 
 interface NoteEditorProps {
@@ -14,6 +14,12 @@ interface NoteEditorProps {
  */
 export function NoteEditor({ initialText, onSave, onCancel }: NoteEditorProps) {
   const [text, setText] = useState(initialText);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // BUG-24 (a11y): move focus into the editor when it opens (partial focus
+  // management for the popover) so keyboard users land in the textarea.
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
   // BUG-23: validate the value that will actually be SAVED (trimmed), and show
   // the counter for that same value, so a valid note with trailing whitespace
   // (e.g. a trailing newline) is never wrongly blocked and the count matches
@@ -32,6 +38,7 @@ export function NoteEditor({ initialText, onSave, onCancel }: NoteEditorProps) {
         Note
       </label>
       <textarea
+        ref={textareaRef}
         id="note-editor-textarea"
         aria-label="Note"
         className="notes-input"

@@ -11,7 +11,7 @@ standards live in `PROJECT_BIBLE.md` §10 — that section is authoritative.
 - **TDD:** tests are written and verified failing before implementation.
   Build Loop steps are tracked with `scripts/process-checklist.sh`.
 - **Never-do rules (review-blocking):** see Bible §10 — notably: the only
-  sanctioned HTML sink is `renderSanitizedHtml()` (DOMPurify); note text is
+  sanctioned HTML sink is `sanitizeToFragment()` (DOMPurify); note text is
   `textContent` only; no network APIs; no `localStorage` outside
   `annotationRepository.ts`; never log document/note content.
 - **Commits:** Conventional Commits (`feat:`/`fix:`/`docs:`/`test:`/`chore:`).

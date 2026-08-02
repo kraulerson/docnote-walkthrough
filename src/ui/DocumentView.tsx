@@ -55,6 +55,14 @@ export function DocumentView({
         containerRef?.(el);
       }}
       className="document-content"
+      // BUG-14 (a11y): make the rendered document keyboard-focusable so
+      // keyboard/screen-reader users can Tab into it; combined with the
+      // section's keyup handler, a keyboard selection surfaces the toolbar.
+      // Full caret-based selection depends on the browser's caret-browsing mode
+      // (documented in USER_GUIDE).
+      tabIndex={0}
+      role="document"
+      aria-label="Rendered document (read-only)"
     />
   );
 }
