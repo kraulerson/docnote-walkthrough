@@ -182,5 +182,31 @@
     },
     "user_response": "n/a",
     "final_outcome": "abandoned"
+  },
+  {
+    "timestamp": "2026-08-02T18:45:46Z",
+    "session_id": null,
+    "type": "sast_suppression",
+    "actor": "user_terminal",
+    "enforcement_level_at_event": "strict",
+    "details": {
+      "directive_count": 16,
+      "files": "WALK-ISSUE-LOG.md docs/security-audits/highlight-apply-and-uat-remediation-security-audit.md src/core/anchors.test.ts tests/uat/sessions/2026-08-02-session-1/agent-results/exploratory-malicious-user.md"
+    },
+    "user_response": "n/a",
+    "final_outcome": "recorded_only"
+  },
+  {
+    "timestamp": "2026-08-02T18:47:14Z",
+    "session_id": null,
+    "type": "sast_suppression",
+    "actor": "user_terminal",
+    "enforcement_level_at_event": "strict",
+    "details": {
+      "directive_count": 1,
+      "files": "WALK-STATE.md"
+    },
+    "user_response": "n/a",
+    "final_outcome": "recorded_only"
   }
 ]

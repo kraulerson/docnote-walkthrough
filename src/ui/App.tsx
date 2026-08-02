@@ -8,6 +8,7 @@ import type { Highlight, HighlightColor, TextAnchor } from '../core/types';
 import { MAX_DOCUMENT_BYTES } from '../core/types';
 import { Banner } from './Banner';
 import { DocumentView } from './DocumentView';
+import { HighlightMenu } from './HighlightMenu';
 import { SelectionToolbar } from './SelectionToolbar';
 
 type ViewState =
@@ -27,6 +28,7 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [highlights, setHighlights] = useState<readonly Highlight[]>([]);
   const [toolbar, setToolbar] = useState<ToolbarState>({ visible: false });
+  const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
   const documentContainer = useRef<HTMLDivElement | null>(null);
   // BUG-4: monotonic token so a slow parse of an earlier file cannot overwrite
   // the result of a later-picked file (concurrent-open race).
@@ -49,6 +51,7 @@ export function App() {
         return; // a newer open superseded this one — drop the stale result
       }
       setHighlights([]);
+      setActiveHighlightId(null);
       setView({ kind: 'ready', fileName: file.name, document: parsed });
     } catch (caught) {
       if (token !== openToken.current) {
@@ -78,7 +81,7 @@ export function App() {
     [openFile],
   );
 
-  const onDocumentMouseUp = useCallback(() => {
+  const onDocumentMouseUp = useCallback((event: React.MouseEvent) => {
     const container = documentContainer.current;
     if (!container) {
       return;
@@ -86,6 +89,11 @@ export function App() {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
       setToolbar({ visible: false });
+      // Feature 3: a plain click (no selection) on an existing highlight opens
+      // its action menu; a click on empty text closes any open menu.
+      const target = event.target as Element | null;
+      const mark = target?.closest?.('mark[data-hl-id]') as HTMLElement | null;
+      setActiveHighlightId(mark?.dataset.hlId ?? null);
       return;
     }
     const range = selection.getRangeAt(0);
@@ -138,6 +146,13 @@ export function App() {
     [toolbar],
   );
 
+  const removeHighlight = useCallback((id: string) => {
+    // Idempotent: filtering a missing id is a no-op. Also drops the note (F4).
+    setHighlights((previous) => previous.filter((h) => h.id !== id));
+    setActiveHighlightId(null);
+    log('info', 'highlight.removed', {});
+  }, []);
+
   const setDocumentContainer = useCallback((element: HTMLDivElement | null) => {
     documentContainer.current = element;
   }, []);
@@ -172,6 +187,11 @@ export function App() {
                 visible={toolbar.visible}
                 hint={toolbar.visible ? toolbar.hint : null}
                 onPick={onColorPick}
+              />
+              <HighlightMenu
+                highlight={highlights.find((h) => h.id === activeHighlightId) ?? null}
+                onRemove={removeHighlight}
+                onClose={() => setActiveHighlightId(null)}
               />
               <DocumentView
                 document={view.document}

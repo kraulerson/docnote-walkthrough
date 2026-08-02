@@ -31,4 +31,16 @@
 
 ---
 
+## Feature 3: remove-highlight
+
+**Phase Built:** 2
+**Status:** Complete
+**Summary:** Clicking an existing highlight opens a text-labeled action menu (HighlightMenu) with a Remove action. Removal filters the highlight from state and the document repaints without it; text content is unchanged and removal is idempotent. The menu is the entry point Feature 4 extends with note actions.
+**Key Interfaces:** src/ui/HighlightMenu.tsx (`HighlightMenu`), src/ui/App.tsx (`removeHighlight`, mark-click detection)
+**Related ADRs:** docs/ADR documentation/ADR-0001-architecture-selection.md
+**Test Coverage:** Component (menu states + onRemove) + App flow (remove restores text, idempotent double-interaction).
+**Known Limitations:** Note-loss confirmation on remove is deferred until notes exist (Feature 4); the menu appears as a strip above the document rather than floating at the highlight.
+
+---
+
 <!-- Copy the section above for each new feature. Number sequentially. -->

@@ -43,6 +43,9 @@ for handoff clarity. Categories are ordered by impact severity.
   schemaVersion 1) defined in src/core/types.ts. No storage behavior yet.
 
 ### Added
+- Feature 3 — remove-highlight: click a highlight to open a text-labeled
+  action menu and remove it; the paragraph returns to normal (text unchanged),
+  removal is idempotent, and the menu is keyboard/pointer operable.
 - Feature 2 — highlight-apply: select text in the rendered document and apply
   one of 3 labeled colors (Yellow/Green/Blue). Anchor model: UTF-16 code-unit
   offsets within non-empty block elements + exactText verification; no
